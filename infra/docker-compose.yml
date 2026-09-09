@@ -11,7 +11,10 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: invoice_provenance
     ports:
-      - "5432:5432"
+      # 5433 on the host: a Homebrew Postgres already owns 5432 for day-to-day
+      # dev on this machine, and binding both would make `up` fail on a clash
+      # that has nothing to do with the app. Inside the network it is 5432.
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
