@@ -1,0 +1,24 @@
+{% extends "_base.html" %}{% block style %}<style>
+  .hdr { display:flex; justify-content:space-between; border-bottom: 3px solid {{ brand|default("#2b4c7e") }}; padding-bottom: 8px; }
+  h1 { margin:0; font-size: 18pt; }
+  .items th { text-align:left; background:#f4f4f4; border-bottom:1px solid #999; font-size:9pt; }
+  .items td { border-bottom: 1px solid #e3e3e3; font-size: 9.5pt; }
+  .summary { margin-top: 12px; width: 50%; margin-left: auto; }
+  .summary td { padding: 3px 8px; } .summary .grand td { border-top: 2px solid #333; font-weight: 700; }
+  .pgnum { position: absolute; bottom: 10mm; right: 16mm; font-size: 8pt; color: #888; }
+</style>{% endblock %}{% block body %}
+<div class="hdr"><div><span class="logo"></span><span class="wordmark">{{ v.name }}</span><div class="small muted" style="margin-top:4px">{{ v.address }} · {{ v.tax_id_label }} {{ v.tax_id }}</div></div>
+  <div class="r"><h1>TAX INVOICE</h1><div>Invoice {{ number }}</div><div class="small muted">Issued {{ date_str }} · Due {{ due_str }}</div></div></div>
+<div style="margin-top:12px"><span class="small muted">Account:</span> <b>{{ buyer.name }}</b> · {{ buyer.address }}</div>
+<table class="items" style="margin-top:12px">
+  <tr><th>Date</th><th>Service</th><th>Site</th><th class="r">Hours/Units</th><th class="r">Rate</th><th class="r">Amount</th></tr>
+  {% for l in lines %}<tr><td>{{ l.date_str }}</td><td>{{ l.desc }}</td><td>{{ l.site }}</td><td class="r">{{ l.qty }}</td><td class="r">{{ fmt(l.unit) }}</td><td class="r">{{ fmt(l.total) }}</td></tr>{% endfor %}
+</table>
+<table class="summary">
+  <tr><td class="muted">Subtotal (ex {{ v.tax_label.split()[0] }})</td><td class="r">{{ fmt(subtotal) }}</td></tr>
+  <tr><td class="muted">{{ v.tax_label }}</td><td class="r">{{ fmt(tax) }}</td></tr>
+  <tr class="grand"><td>Total amount due</td><td class="r">{{ sym }}{{ fmt(total) }}</td></tr>
+</table>
+<p class="small muted" style="margin-top:18px">{{ v.payment_note }}. Please reference {{ number }}.</p>
+<div class="pgnum">Page 1 of 1</div>
+{% endblock %}

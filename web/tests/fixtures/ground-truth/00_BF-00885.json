@@ -1,0 +1,42 @@
+{
+  "file": "00_BF-00885.pdf",
+  "template": "uk_service.html",
+  "scanned": "",
+  "vendor": "Bluefern Supplies Ltd",
+  "invoice_number": "BF-00885",
+  "invoice_date": "2025-05-06",
+  "due_date": "2025-06-20",
+  "currency": "GBP",
+  "subtotal": 2072.63,
+  "tax": 414.53,
+  "total": 2487.16,
+  "line_items": [
+    {
+      "description": "Label printer tape, 6 rolls",
+      "qty": 6,
+      "unit_price": 149.4,
+      "amount": 996.4
+    },
+    {
+      "description": "Copy paper A4 80gsm, 20 reams",
+      "qty": 3,
+      "unit_price": 122.74,
+      "amount": 368.22
+    },
+    {
+      "description": "Office consumables, monthly",
+      "qty": 1,
+      "unit_price": 324.45,
+      "amount": 324.45
+    },
+    {
+      "description": "Office consumables, monthly",
+      "qty": 2,
+      "unit_price": 241.78,
+      "amount": 483.56
+    }
+  ],
+  "planted": [
+    "line_sum_mismatch"
+  ]
+}

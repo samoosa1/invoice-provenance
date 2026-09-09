@@ -1,0 +1,46 @@
+{
+  "file": "14_TIB-0000104.pdf",
+  "template": "us_letter.html",
+  "scanned": "",
+  "vendor": "Tidewell Insurance Brokers",
+  "invoice_number": "TIB-0000104",
+  "invoice_date": "2025-03-01",
+  "due_date": "2025-03-15",
+  "currency": "USD",
+  "subtotal": 4050.08,
+  "tax": 0.0,
+  "total": 4050.08,
+  "line_items": [
+    {
+      "description": "Broker fee",
+      "qty": 1,
+      "unit_price": 183.28,
+      "amount": 183.28
+    },
+    {
+      "description": "Policy endorsement",
+      "qty": 1,
+      "unit_price": 200.96,
+      "amount": 200.96
+    },
+    {
+      "description": "Policy endorsement",
+      "qty": 10,
+      "unit_price": 283.03,
+      "amount": 2830.3
+    },
+    {
+      "description": "Policy endorsement",
+      "qty": 2,
+      "unit_price": 137.1,
+      "amount": 274.2
+    },
+    {
+      "description": "Property coverage",
+      "qty": 2,
+      "unit_price": 280.67,
+      "amount": 561.34
+    }
+  ],
+  "planted": []
+}

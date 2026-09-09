@@ -1,0 +1,70 @@
+{
+  "file": "10_AF-00500.pdf",
+  "template": "statement.html",
+  "scanned": "",
+  "vendor": "Amberlake Facilities",
+  "invoice_number": "AF-00500",
+  "invoice_date": "2025-04-01",
+  "due_date": "2025-05-01",
+  "currency": "AUD",
+  "subtotal": 15355.19,
+  "tax": 1535.52,
+  "total": 16890.71,
+  "line_items": [
+    {
+      "description": "Security patrol, nights",
+      "qty": 1,
+      "unit_price": 56.89,
+      "amount": 56.89
+    },
+    {
+      "description": "Security patrol, nights",
+      "qty": 1,
+      "unit_price": 345.31,
+      "amount": 345.31
+    },
+    {
+      "description": "Cleaning, weekly",
+      "qty": 6,
+      "unit_price": 520.65,
+      "amount": 3123.9
+    },
+    {
+      "description": "Grounds maintenance",
+      "qty": 1,
+      "unit_price": 216.59,
+      "amount": 216.59
+    },
+    {
+      "description": "Grounds maintenance",
+      "qty": 12,
+      "unit_price": 478.92,
+      "amount": 5747.04
+    },
+    {
+      "description": "Cleaning, weekly",
+      "qty": 4,
+      "unit_price": 272.18,
+      "amount": 1088.72
+    },
+    {
+      "description": "HVAC filter service",
+      "qty": 4,
+      "unit_price": 606.36,
+      "amount": 2425.44
+    },
+    {
+      "description": "Waste collection",
+      "qty": 4,
+      "unit_price": 533.57,
+      "amount": 2134.28
+    },
+    {
+      "description": "Grounds maintenance",
+      "qty": 1,
+      "unit_price": 217.02,
+      "amount": 217.02
+    }
+  ],
+  "planted": []
+}

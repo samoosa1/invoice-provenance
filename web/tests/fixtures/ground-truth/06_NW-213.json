@@ -1,0 +1,28 @@
+{
+  "file": "06_NW-213.pdf",
+  "template": "us_letter.html",
+  "scanned": "flatbed",
+  "vendor": "Nordway Logistics",
+  "invoice_number": "NW-213",
+  "invoice_date": "2025-03-24",
+  "due_date": "2025-04-23",
+  "currency": "USD",
+  "subtotal": 4217.48,
+  "tax": 0.0,
+  "total": 4217.48,
+  "line_items": [
+    {
+      "description": "Fuel surcharge",
+      "qty": 2,
+      "unit_price": 226.39,
+      "amount": 452.78
+    },
+    {
+      "description": "Fuel surcharge",
+      "qty": 10,
+      "unit_price": 376.47,
+      "amount": 3764.7
+    }
+  ],
+  "planted": []
+}

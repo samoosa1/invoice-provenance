@@ -1,0 +1,46 @@
+{
+  "file": "12_WS-0316.pdf",
+  "template": "uk_service.html",
+  "scanned": "",
+  "vendor": "Wrenfield Software Ltd",
+  "invoice_number": "WS-0316",
+  "invoice_date": "2025-06-03",
+  "due_date": "2025-07-03",
+  "currency": "GBP",
+  "subtotal": 4900.96,
+  "tax": 980.19,
+  "total": 5881.15,
+  "line_items": [
+    {
+      "description": "Priority support",
+      "qty": 1,
+      "unit_price": 279.33,
+      "amount": 279.33
+    },
+    {
+      "description": "Subscription, monthly",
+      "qty": 4,
+      "unit_price": 232.97,
+      "amount": 931.88
+    },
+    {
+      "description": "Additional seats",
+      "qty": 1,
+      "unit_price": 156.07,
+      "amount": 156.07
+    },
+    {
+      "description": "Subscription, monthly",
+      "qty": 10,
+      "unit_price": 232.18,
+      "amount": 2321.8
+    },
+    {
+      "description": "Subscription, monthly",
+      "qty": 4,
+      "unit_price": 302.97,
+      "amount": 1211.88
+    }
+  ],
+  "planted": []
+}

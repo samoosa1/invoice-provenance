@@ -1,0 +1,46 @@
+{
+  "file": "19_319.pdf",
+  "template": "minimal_freelancer.html",
+  "scanned": "",
+  "vendor": "Orrin Bakke Elektro AS",
+  "invoice_number": "319",
+  "invoice_date": "2025-05-13",
+  "due_date": null,
+  "currency": "EUR",
+  "subtotal": null,
+  "tax": 1070.73,
+  "total": 5353.66,
+  "line_items": [
+    {
+      "description": "Materiell",
+      "qty": 2,
+      "unit_price": null,
+      "amount": 396.54
+    },
+    {
+      "description": "Elektroinstallasjon, timer",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 236.13
+    },
+    {
+      "description": "Elektroinstallasjon, timer",
+      "qty": 2,
+      "unit_price": null,
+      "amount": 344.36
+    },
+    {
+      "description": "Materiell",
+      "qty": 6,
+      "unit_price": null,
+      "amount": 1906.86
+    },
+    {
+      "description": "Elektroinstallasjon, timer",
+      "qty": 4,
+      "unit_price": null,
+      "amount": 1399.04
+    }
+  ],
+  "planted": []
+}

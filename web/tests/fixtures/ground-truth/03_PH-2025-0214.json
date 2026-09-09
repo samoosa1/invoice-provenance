@@ -1,0 +1,46 @@
+{
+  "file": "03_PH-2025-0214.pdf",
+  "template": "grid_einvoice.html",
+  "scanned": "",
+  "vendor": "Pinehollow Office Co",
+  "invoice_number": "PH/2025/0214",
+  "invoice_date": "2025-03-22",
+  "due_date": "2025-04-21",
+  "currency": "EUR",
+  "subtotal": 1106.51,
+  "tax": 210.24,
+  "total": 1316.75,
+  "line_items": [
+    {
+      "description": "Bürostuhl ergonomisch",
+      "qty": 1,
+      "unit_price": 391.55,
+      "amount": 391.55
+    },
+    {
+      "description": "Montage und Lieferung",
+      "qty": 2,
+      "unit_price": 210.68,
+      "amount": 421.36
+    },
+    {
+      "description": "Schreibtisch höhenverstellbar",
+      "qty": 1,
+      "unit_price": 130.65,
+      "amount": 130.65
+    },
+    {
+      "description": "Aktenschrank 4OH",
+      "qty": 1,
+      "unit_price": 126.22,
+      "amount": 126.22
+    },
+    {
+      "description": "Monitorarm",
+      "qty": 1,
+      "unit_price": 36.73,
+      "amount": 36.73
+    }
+  ],
+  "planted": []
+}

@@ -1,0 +1,26 @@
+/*
+ * Minimal reset only. All appearance lives in App.css.
+ *
+ * The Vite scaffold's index.css is deliberately not kept: it pinned #root
+ * to a centred 1126px column with side borders, set h1 to 56px, and
+ * declared `color-scheme: light dark` with a dark palette. This is a
+ * dense, deliberately light financial tool, and the app controls its own
+ * width, so those would all have to be fought rather than built on.
+ */
+
+:root {
+  /* Explicitly light: form controls and scrollbars should not flip to a
+   * dark treatment on a page that stays white either way. */
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body { margin: 0; }
+
+#root { min-height: 100svh; }
+
+h1, h2, h3, h4 { font-weight: 600; }
+p { margin: 0; }

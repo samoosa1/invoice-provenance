@@ -1,0 +1,46 @@
+{% extends "_base.html" %}{% block style %}<style>
+  body { font-size: 9pt; }
+  .page { padding: 12mm 12mm; }
+  .top { display:flex; justify-content:space-between; }
+  .party { width: 46%; }
+  .party .title { font-weight:700; font-size: 11pt; }
+  .doc { width: 40%; border: 1px solid #333; }
+  .doc td { border-bottom: 1px solid #333; padding: 3px 6px; }
+  .doc td:first-child { background:#f1f1f1; width: 45%; }
+  h1 { text-align:center; font-size: 14pt; margin: 8px 0 4px; letter-spacing: 3px; }
+  .items th, .items td { border: 1px solid #333; font-size: 8.5pt; }
+  .items th { background: #e8e8e8; }
+  .bottom { display:flex; justify-content:space-between; margin-top: 8px; }
+  .sums { width: 42%; } .sums td { border: 1px solid #333; padding: 3px 6px; }
+  .sums td:first-child { background:#f1f1f1; }
+  .words { width: 54%; font-size: 8.5pt; }
+</style>{% endblock %}{% block body %}
+<div class="top">
+  <div class="party"><span class="logo" style="width:26px;height:26px"></span><span class="title">{{ v.name }}</span><br>
+    {{ v.address }}<br>{{ v.tax_id_label }}: {{ v.tax_id }}<br><span class="muted">{{ v.payment_note }}</span></div>
+  <div class="c"><div class="qr" style="margin:0 auto"></div></div>
+  <table class="doc">
+    <tr><td>Document type</td><td>{% if credit_note %}Credit note{% else %}Commercial invoice{% endif %}</td></tr>
+    <tr><td>Invoice No</td><td><b>{{ number }}</b></td></tr>
+    <tr><td>Issue date</td><td>{{ date_str }}</td></tr>
+    <tr><td>Due date</td><td>{{ due_str }}</td></tr>
+    <tr><td>Document ID</td><td class="small">{{ uuid }}</td></tr>
+  </table>
+</div>
+<h1>{% if credit_note %}CREDIT NOTE{% else %}INVOICE{% endif %}</h1>
+<div class="party" style="margin-top:6px"><span class="muted">Customer</span><br><b>{{ buyer.name }}</b><br>{{ buyer.address }}</div>
+<table class="items" style="margin-top:8px">
+  <tr><th>#</th><th style="text-align:left">Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th>Disc.</th><th>Tax %</th><th>Tax amount</th><th>Line total</th></tr>
+  {% for l in lines %}<tr><td class="c">{{ loop.index }}</td><td>{{ l.desc }}</td><td class="r">{{ l.qty }}</td><td class="c">pc</td><td class="r">{{ fmt(l.unit) }}</td><td class="r">0,00</td><td class="c">{{ (v.tax_rate*100)|int }}</td><td class="r">{{ fmt(l.total * v.tax_rate) }}</td><td class="r">{{ fmt(l.total) }}</td></tr>{% endfor %}
+</table>
+<div class="bottom">
+  <div class="words"><b>Amount in words:</b> {{ words }}<br><br><span class="muted">Notes: {{ notes }}</span></div>
+  <table class="sums">
+    <tr><td>Goods/services total</td><td class="r">{{ fmt(subtotal) }} {{ v.currency }}</td></tr>
+    <tr><td>Discount</td><td class="r">0,00 {{ v.currency }}</td></tr>
+    <tr><td>Tax base</td><td class="r">{{ fmt(subtotal) }} {{ v.currency }}</td></tr>
+    <tr><td>{{ v.tax_label }}</td><td class="r">{{ fmt(tax) }} {{ v.currency }}</td></tr>
+    <tr><td><b>Total payable</b></td><td class="r"><b>{{ fmt(total) }} {{ v.currency }}</b></td></tr>
+  </table>
+</div>
+{% endblock %}

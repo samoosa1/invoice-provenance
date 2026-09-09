@@ -1,0 +1,46 @@
+{
+  "file": "05_MPS000401.pdf",
+  "template": "uk_service.html",
+  "scanned": "",
+  "vendor": "Meridian Print Services",
+  "invoice_number": "MPS000401",
+  "invoice_date": "2025-04-13",
+  "due_date": "2025-04-27",
+  "currency": "GBP",
+  "subtotal": 7133.06,
+  "tax": 1426.61,
+  "total": 8559.67,
+  "line_items": [
+    {
+      "description": "Brochures A5, 500 copies",
+      "qty": 1,
+      "unit_price": 210.21,
+      "amount": 210.21
+    },
+    {
+      "description": "Letterheads, 1000",
+      "qty": 1,
+      "unit_price": 333.85,
+      "amount": 333.85
+    },
+    {
+      "description": "Design amends, hours",
+      "qty": 6,
+      "unit_price": 314.86,
+      "amount": 1889.16
+    },
+    {
+      "description": "Design amends, hours",
+      "qty": 10,
+      "unit_price": 163.18,
+      "amount": 1631.8
+    },
+    {
+      "description": "Brochures A5, 500 copies",
+      "qty": 12,
+      "unit_price": 255.67,
+      "amount": 3068.04
+    }
+  ],
+  "planted": []
+}

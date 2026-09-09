@@ -1,0 +1,46 @@
+{
+  "file": "22_HR-0173.pdf",
+  "template": "grid_einvoice.html",
+  "scanned": "",
+  "vendor": "Halden & Roux Avocats",
+  "invoice_number": "HR-0173",
+  "invoice_date": "2025-06-06",
+  "due_date": "2025-07-06",
+  "currency": "EUR",
+  "subtotal": 2351.21,
+  "tax": 470.24,
+  "total": 2821.45,
+  "line_items": [
+    {
+      "description": "Honoraires forfaitaires",
+      "qty": 3,
+      "unit_price": 419.59,
+      "amount": 1258.77
+    },
+    {
+      "description": "Honoraires forfaitaires",
+      "qty": 1,
+      "unit_price": 122.37,
+      "amount": 122.37
+    },
+    {
+      "description": "Consultation juridique",
+      "qty": 1,
+      "unit_price": 70.91,
+      "amount": 70.91
+    },
+    {
+      "description": "Honoraires forfaitaires",
+      "qty": 3,
+      "unit_price": 101.82,
+      "amount": 305.46
+    },
+    {
+      "description": "Consultation juridique",
+      "qty": 3,
+      "unit_price": 197.9,
+      "amount": 593.7
+    }
+  ],
+  "planted": []
+}

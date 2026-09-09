@@ -1,0 +1,40 @@
+{
+  "file": "01_TIB-0000101.pdf",
+  "template": "us_letter.html",
+  "scanned": "",
+  "vendor": "Tidewell Insurance Brokers",
+  "invoice_number": "TIB-0000101",
+  "invoice_date": "2025-04-17",
+  "due_date": "2025-05-01",
+  "currency": "USD",
+  "subtotal": 1733.82,
+  "tax": 0.0,
+  "total": 1733.82,
+  "line_items": [
+    {
+      "description": "Broker fee",
+      "qty": 2,
+      "unit_price": 18.19,
+      "amount": 36.38
+    },
+    {
+      "description": "General liability premium",
+      "qty": 2,
+      "unit_price": 93.3,
+      "amount": 186.6
+    },
+    {
+      "description": "Broker fee",
+      "qty": 1,
+      "unit_price": 103.72,
+      "amount": 103.72
+    },
+    {
+      "description": "Policy endorsement",
+      "qty": 4,
+      "unit_price": 351.78,
+      "amount": 1407.12
+    }
+  ],
+  "planted": []
+}

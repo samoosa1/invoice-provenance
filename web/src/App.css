@@ -1,0 +1,202 @@
+/* Design tokens carried over from ledger-reconciler (same author, MIT). Layout below is this project's own. */
+/*
+ * Dark editorial reading surface, lit in iris.
+ *
+ * Mood: late-evening desk lamp on a ledger. Only the numbers are lit.
+ *
+ * Two anti-references drove this. It is not the navy enterprise chrome
+ * this project shipped first, and it is not neon-terminal dark, which is
+ * the reflex any finance tool falls into once it decides against navy.
+ * What it is instead: a serious reading surface. Type does the hierarchy,
+ * and the figures are the subject.
+ *
+ * Strategy: Committed. The surface is not neutral grey-black; it is a
+ * deep iris that carries about half the visible area, with a single
+ * lighter iris doing every interactive job.
+ *
+ * ONE RULE GOVERNS THE WHOLE PALETTE, and it is worth stating because it
+ * decides every colour below: the findings own the warm half of the
+ * spectrum, so the interface owns the cool half. Green, amber and red
+ * mean something specific here, and nothing decorative is allowed to
+ * borrow them. That is why the surface, the accent, the focus ring, the
+ * links and the primary button all sit in one narrow band around hue 278
+ * -- an unread page is entirely cool, so the first warm pixel on screen
+ * is always a result, never chrome.
+ *
+ * Hue 278 rather than the 240 this started at. 240 is navy, which is the
+ * exact enterprise register the redesign set out to leave; pushing into
+ * iris keeps the coolness while dropping the association.
+ */
+
+:root {
+  /* ---- surfaces: deep iris, not neutral black ---- */
+  --bg: oklch(0.155 0.030 278);
+  --surface: oklch(0.205 0.034 278);
+  --raised: oklch(0.252 0.038 278);
+  --line: oklch(0.335 0.040 278);
+  --line-soft: oklch(0.268 0.034 278);
+  /* Separate token for the outline of an interactive control. WCAG 1.4.11
+     asks 3:1 for the boundary that identifies a component, which --line
+     (1.63:1) does not meet. Table rules keep --line: a row separator is
+     decoration between content, not the edge of a control. */
+  --edge: oklch(0.505 0.050 278);
+
+  /* ---- ink: carries the surface hue so text sits in the page rather
+         than floating on top of it ---- */
+  --ink: oklch(0.96 0.012 278);
+  --muted: oklch(0.755 0.030 278);
+  /* L chosen so 11px uppercase column headers still clear WCAG AA 4.5:1
+     on BOTH bg and surface. At 0.52 it measured 3.68:1, which only passes
+     as large text, and none of its uses are large. Re-measured after the
+     surfaces gained chroma; the tinted background is slightly lighter in
+     luminance than the neutral one, so this floor had to rise with it. */
+  --faint: oklch(0.655 0.032 278);
+
+  /* ---- accent: the lit iris. Focus, selection, links, the drop target
+         and the primary button all draw from this one colour, which is
+         what makes the interface read as coloured rather than as a grey
+         page with a coloured detail. ---- */
+  --accent: oklch(0.755 0.155 278);
+  --accent-hover: oklch(0.815 0.145 278);
+  --accent-dim: oklch(0.56 0.13 278);
+  --accent-wash: oklch(0.755 0.155 278 / 0.16);
+  --accent-edge: oklch(0.755 0.155 278 / 0.62);
+
+  /* ---- action: the accent itself, with the page's own dark as the
+         label. A near-white button was the safe call and it was also the
+         one thing keeping the screen looking monochrome. ---- */
+  --action: var(--accent);
+  --action-hover: var(--accent-hover);
+  --on-action: oklch(0.155 0.030 278);
+
+  /* ---- semantic: the warm half, reserved. Lightness is deliberately
+         spread so the three remain distinguishable without hue, for
+         colour-vision deficiency. Every status also carries a text
+         label; colour never stands alone. ---- */
+  --ok: oklch(0.80 0.155 158);
+  --ok-wash: oklch(0.80 0.155 158 / 0.15);
+  --warn: oklch(0.845 0.150 78);
+  --warn-wash: oklch(0.845 0.150 78 / 0.15);
+  --bad: oklch(0.685 0.195 25);
+  --bad-wash: oklch(0.685 0.195 25 / 0.17);
+
+  /* Meter fills only. --ok and --warn are tuned to be readable AS TEXT on
+     a dark ground, which puts them at nearly the same lightness, so side
+     by side in a bar they differ by hue alone (measured 1.07:1). Anyone
+     with red-green deficiency would see one uninterrupted band. These two
+     are spread in lightness instead, and the bar also carries a hairline
+     gap so the split is positional as well as chromatic. */
+  --meter-ok: oklch(0.80 0.155 158);
+  --meter-warn: oklch(0.53 0.145 55);
+
+  /* ---- type ----
+     Two families, each with a job the other cannot do.
+
+     Archivo for everything the interface says. An American grotesque
+     drawn for heavy weights and small sizes: squared skeleton, tight
+     apertures, no bookish softness. It replaces two earlier attempts that
+     both failed the same way -- Georgia at 400 was thin-stroked and made
+     a reconciliation tool look like an essay, and IBM Plex Sans, while
+     better, is humanist enough that even 600 reads soft. Archivo has real
+     mass at 600-700, which is what "solid" actually asks for.
+
+     Deliberately not Inter, the face every tool in this category reaches
+     for by default.
+
+     IBM Plex Mono for figures only. A proportional face cannot align a
+     column of money no matter how it is tuned, so this is the one place a
+     second family earns its keep. Both carry full Latin Extended, so
+     Turkish dotted/dotless i renders rather than falling back mid-word. */
+  --display: 'Archivo Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sans: 'Archivo Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ---- weight ----
+     Named by role, not number, because the dark surface shifts what each
+     number does. Light text on a dark ground optically thins, so every
+     role sits one notch heavier than it would on white. Archivo is
+     variable, so these are real values rather than the nearest of four
+     static cuts. */
+  --w-body: 420;
+  --w-medium: 520;
+  --w-label: 580;
+  --w-display: 700;
+
+  /* ---- size ----
+     Named for the role each size serves, not its place in a ramp, so a
+     rule reads as a decision rather than a lookup. Fixed rem, not fluid:
+     product UI is viewed at consistent DPI and a clamped heading only
+     shrinks in a narrow panel.
+
+     --t-body is 1rem. It was 0.875rem, and that single value was doing
+     most of the damage the last two font swaps were blamed for: prose set
+     at 14px with 13px secondary text reads as flimsy under any typeface.
+     Density is kept where density is earned -- table cells and column
+     headers -- and nowhere else. */
+  --t-micro: 0.75rem;   /* column headers, tags, figure labels */
+  --t-data: 0.8125rem;  /* table cells: dense by intent */
+  --t-ui: 0.875rem;     /* buttons, chips, inline controls */
+  --t-body: 1rem;       /* prose the visitor actually reads */
+  --t-lead: 1.125rem;   /* the one paragraph under the masthead */
+  --t-h2: 1.75rem;
+  --t-h1: 2.5rem;
+
+  /* ---- leading ----
+     Headings previously inherited the body's 1.55, which is why they read
+     as loose and weak at 28px. Leading tightens as size grows. */
+  --lh-display: 1.08;
+  --lh-h2: 1.16;
+  --lh-body: 1.6;
+  --lh-tight: 1.35;
+
+  /* ---- tracking ----
+     Negative on display to close the gaps a large grotesque opens up;
+     slightly positive on small light-on-dark text, which optically
+     smears without it. Floor of -0.04em per the display rule. */
+  --tr-h1: -0.028em;
+  --tr-h2: -0.022em;
+  --tr-body: 0.005em;
+  --tr-micro: 0.02em;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* Semantic, never arbitrary. */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-overlay: 200;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out-quart */
+  --dur: 180ms;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  display: block;
+  place-items: normal;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  font-weight: var(--w-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tr-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers are the subject: tabular figures everywhere by default so
+   columns of money align on the decimal without per-cell effort. */
+.num, .mono, table { font-variant-numeric: tabular-nums; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

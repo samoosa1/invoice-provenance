@@ -1,0 +1,40 @@
+{
+  "file": "16_HR-0170.pdf",
+  "template": "grid_einvoice.html",
+  "scanned": "",
+  "vendor": "Halden & Roux Avocats",
+  "invoice_number": "HR-0170",
+  "invoice_date": "2025-04-21",
+  "due_date": "2025-05-21",
+  "currency": "EUR",
+  "subtotal": 4278.45,
+  "tax": 855.69,
+  "total": 5134.14,
+  "line_items": [
+    {
+      "description": "Honoraires forfaitaires",
+      "qty": 4,
+      "unit_price": 220.66,
+      "amount": 882.64
+    },
+    {
+      "description": "Rédaction de contrat",
+      "qty": 12,
+      "unit_price": 249.28,
+      "amount": 2991.36
+    },
+    {
+      "description": "Honoraires forfaitaires",
+      "qty": 1,
+      "unit_price": 137.07,
+      "amount": 137.07
+    },
+    {
+      "description": "Revue de conformité",
+      "qty": 1,
+      "unit_price": 267.38,
+      "amount": 267.38
+    }
+  ],
+  "planted": []
+}

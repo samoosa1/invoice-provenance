@@ -1,0 +1,22 @@
+{
+  "file": "13_PH-2025-0215.pdf",
+  "template": "grid_einvoice.html",
+  "scanned": "flatbed",
+  "vendor": "Pinehollow Office Co",
+  "invoice_number": "PH/2025/0215",
+  "invoice_date": "2025-03-01",
+  "due_date": "2025-03-31",
+  "currency": "EUR",
+  "subtotal": 889.86,
+  "tax": 169.07,
+  "total": 1058.93,
+  "line_items": [
+    {
+      "description": "Schreibtisch höhenverstellbar",
+      "qty": 6,
+      "unit_price": 148.31,
+      "amount": 889.86
+    }
+  ],
+  "planted": []
+}

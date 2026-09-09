@@ -1,0 +1,46 @@
+{
+  "file": "20_811.pdf",
+  "template": "thermal_receipt.html",
+  "scanned": "",
+  "vendor": "Saltmarsh Coffee Roasters",
+  "invoice_number": "811",
+  "invoice_date": "2025-04-03",
+  "due_date": null,
+  "currency": "USD",
+  "subtotal": 111.91,
+  "tax": 9.93,
+  "total": 121.84,
+  "line_items": [
+    {
+      "description": "Single origin 250g",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 24.15
+    },
+    {
+      "description": "Espresso blend 1kg",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 10.49
+    },
+    {
+      "description": "Cold brew 5L",
+      "qty": 2,
+      "unit_price": null,
+      "amount": 13.0
+    },
+    {
+      "description": "Cold brew 5L",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 9.73
+    },
+    {
+      "description": "Cold brew 5L",
+      "qty": 6,
+      "unit_price": null,
+      "amount": 54.54
+    }
+  ],
+  "planted": []
+}

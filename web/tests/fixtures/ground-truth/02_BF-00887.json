@@ -1,0 +1,42 @@
+{
+  "file": "02_BF-00887.pdf",
+  "template": "uk_service.html",
+  "scanned": "",
+  "vendor": "Bluefern Supplies Ltd",
+  "invoice_number": "BF-00887",
+  "invoice_date": "2025-06-05",
+  "due_date": "2025-06-19",
+  "currency": "GBP",
+  "subtotal": 3132.12,
+  "tax": 626.42,
+  "total": 3758.54,
+  "line_items": [
+    {
+      "description": "Toner cartridges, pack of 4",
+      "qty": 1,
+      "unit_price": 293.07,
+      "amount": 393.07
+    },
+    {
+      "description": "Label printer tape, 6 rolls",
+      "qty": 3,
+      "unit_price": 306.55,
+      "amount": 919.65
+    },
+    {
+      "description": "Label printer tape, 6 rolls",
+      "qty": 2,
+      "unit_price": 65.37,
+      "amount": 130.74
+    },
+    {
+      "description": "Label printer tape, 6 rolls",
+      "qty": 6,
+      "unit_price": 298.11,
+      "amount": 1788.66
+    }
+  ],
+  "planted": [
+    "line_sum_mismatch"
+  ]
+}

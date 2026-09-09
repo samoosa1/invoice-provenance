@@ -1,0 +1,23 @@
+{% extends "_base.html" %}{% block style %}<style>
+  body { font-family: "Courier New", Courier, monospace; font-size: 10pt; }
+  .page { padding: 26mm 22mm; }
+  h1 { font-size: 13pt; margin: 0 0 18px; }
+  td { padding: 2px 0; }
+  .line { border-top: 1px dashed #999; margin: 14px 0; }
+</style>{% endblock %}{% block body %}
+<h1>{{ v.name }}</h1>
+<div class="small">{{ v.address }}{% if v.tax_id %}<br>{{ v.tax_id_label }} {{ v.tax_id }}{% endif %}</div>
+<div class="line"></div>
+<table style="width:auto">
+  <tr><td>{% if credit_note %}Credit note{% else %}Invoice{% endif %} no.</td><td style="padding-left:20px">{{ number }}</td></tr>
+  <tr><td>Date</td><td style="padding-left:20px">{{ date_str }}</td></tr>
+  <tr><td>For</td><td style="padding-left:20px">{{ buyer.name }}</td></tr>
+</table>
+<div class="line"></div>
+{% for l in lines %}<div style="display:flex;justify-content:space-between"><span>{{ l.desc }}{% if l.qty != 1 %} x{{ l.qty }}{% endif %}</span><span>{{ fmt(l.total) }}</span></div>{% endfor %}
+<div class="line"></div>
+{% if tax %}<div style="display:flex;justify-content:space-between"><span>{{ v.tax_label }}</span><span>{{ fmt(tax) }}</span></div>{% endif %}
+<div style="display:flex;justify-content:space-between;font-weight:700"><span>TOTAL {{ v.currency }}</span><span>{{ fmt(total) }}</span></div>
+<div class="line"></div>
+<div class="small">{{ v.payment_note }}</div>
+{% endblock %}

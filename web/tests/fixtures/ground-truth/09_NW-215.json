@@ -1,0 +1,40 @@
+{
+  "file": "09_NW-215.pdf",
+  "template": "us_letter.html",
+  "scanned": "",
+  "vendor": "Nordway Logistics",
+  "invoice_number": "NW-215",
+  "invoice_date": "2025-04-15",
+  "due_date": "2025-05-15",
+  "currency": "USD",
+  "subtotal": 6117.64,
+  "tax": 0.0,
+  "total": 6117.64,
+  "line_items": [
+    {
+      "description": "Fuel surcharge",
+      "qty": 3,
+      "unit_price": 49.5,
+      "amount": 148.5
+    },
+    {
+      "description": "Warehouse storage, per week",
+      "qty": 1,
+      "unit_price": 282.18,
+      "amount": 282.18
+    },
+    {
+      "description": "Cross-dock transfer",
+      "qty": 10,
+      "unit_price": 99.88,
+      "amount": 998.8
+    },
+    {
+      "description": "Freight, regional route",
+      "qty": 12,
+      "unit_price": 390.68,
+      "amount": 4688.16
+    }
+  ],
+  "planted": []
+}

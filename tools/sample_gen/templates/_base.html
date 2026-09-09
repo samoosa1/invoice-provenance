@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  @page { margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: {{ font|default("Helvetica, Arial, sans-serif") }}; color: #1a1a1a; font-size: 10.5pt; }
+  .page { padding: 18mm 16mm; min-height: 100%; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: 4px 6px; vertical-align: top; }
+  .r { text-align: right; } .c { text-align: center; }
+  .muted { color: #666; } .small { font-size: 8.5pt; }
+  .logo { display: inline-block; width: 34px; height: 34px; border-radius: 6px; background: {{ brand|default("#2b4c7e") }}; vertical-align: middle; margin-right: 8px; }
+  .wordmark { font-weight: 700; font-size: 15pt; letter-spacing: .2px; vertical-align: middle; }
+  .stamp { position: absolute; border: 2px solid rgba(180,30,30,.75); color: rgba(180,30,30,.8); padding: 3px 8px; font-weight: 700; transform: rotate(-9deg); font-size: 11pt; letter-spacing: 1px; }
+  .sig { font-family: "Brush Script MT", "Snell Roundhand", cursive; font-size: 16pt; color: #1b2a6b; }
+  .qr { width: 64px; height: 64px; background:
+    repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 6px),
+    repeating-linear-gradient(0deg,#000 0 3px,#fff 3px 6px); background-blend-mode: multiply; border: 3px solid #fff; outline: 1px solid #000; }
+</style>{% block style %}{% endblock %}</head><body><div class="page">{% block body %}{% endblock %}</div></body></html>

@@ -1,0 +1,28 @@
+{
+  "file": "17_CF-2025-513.pdf",
+  "template": "minimal_freelancer.html",
+  "scanned": "",
+  "vendor": "Cedar & Finch Consulting",
+  "invoice_number": "CF-2025-513",
+  "invoice_date": "2025-06-03",
+  "due_date": null,
+  "currency": "USD",
+  "subtotal": null,
+  "tax": 0.0,
+  "total": 1411.79,
+  "line_items": [
+    {
+      "description": "Report drafting",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 62.03
+    },
+    {
+      "description": "Report drafting",
+      "qty": 6,
+      "unit_price": null,
+      "amount": 1349.76
+    }
+  ],
+  "planted": []
+}

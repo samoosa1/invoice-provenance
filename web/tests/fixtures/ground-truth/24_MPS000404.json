@@ -1,0 +1,46 @@
+{
+  "file": "24_MPS000404.pdf",
+  "template": "uk_service.html",
+  "scanned": "",
+  "vendor": "Meridian Print Services",
+  "invoice_number": "MPS000404",
+  "invoice_date": "2025-07-11",
+  "due_date": "2025-08-10",
+  "currency": "GBP",
+  "subtotal": 5248.06,
+  "tax": 1049.61,
+  "total": 6297.67,
+  "line_items": [
+    {
+      "description": "Business cards, 250",
+      "qty": 12,
+      "unit_price": 107.52,
+      "amount": 1290.24
+    },
+    {
+      "description": "Roller banner 850mm",
+      "qty": 2,
+      "unit_price": 301.22,
+      "amount": 602.44
+    },
+    {
+      "description": "Roller banner 850mm",
+      "qty": 12,
+      "unit_price": 201.64,
+      "amount": 2419.68
+    },
+    {
+      "description": "Brochures A5, 500 copies",
+      "qty": 3,
+      "unit_price": 250.44,
+      "amount": 751.32
+    },
+    {
+      "description": "Brochures A5, 500 copies",
+      "qty": 2,
+      "unit_price": 92.19,
+      "amount": 184.38
+    }
+  ],
+  "planted": []
+}

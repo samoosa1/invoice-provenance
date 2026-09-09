@@ -1,0 +1,36 @@
+{% extends "_base.html" %}{% block style %}<style>
+  body { font-family: Georgia, "Times New Roman", serif; }
+  .band { background: {{ brand|default("#2b4c7e") }}; color: #fff; padding: 10mm 16mm; margin: -18mm -16mm 0; display:flex; justify-content:space-between; align-items:center; }
+  .band h1 { margin:0; font-size: 26pt; font-weight: 400; }
+  .cols { display:flex; gap: 24px; margin-top: 16px; }
+  .cols > div { flex:1; }
+  .box { border: 1px solid #bbb; padding: 8px 10px; }
+  .items th { background: #eef1f6; text-align:left; border: 1px solid #bbb; font-size: 9pt; }
+  .items td { border: 1px solid #bbb; }
+  .due { margin-top: 14px; display:flex; justify-content:flex-end; }
+  .due table { width: 48%; } .due td { padding: 3px 8px; }
+  .due .grand td { background:#eef1f6; font-weight:700; font-size: 12pt; }
+</style>{% endblock %}{% block body %}
+<div class="band"><div><div style="font-size:16pt;font-weight:700">{{ v.name }}</div><div class="small">{{ v.address }} · {{ v.tax_id_label }} {{ v.tax_id }}</div></div><h1>{% if credit_note %}Credit Memo{% else %}Invoice{% endif %}</h1></div>
+<div class="cols">
+  <div class="box"><div class="small muted">BILL TO</div><b>{{ buyer.name }}</b><br>{{ buyer.address }}<br>{{ buyer.contact }}</div>
+  <div class="box"><table style="width:auto">
+    <tr><td class="muted">Invoice #</td><td><b>{{ number }}</b></td></tr>
+    <tr><td class="muted">Date</td><td>{{ date_str }}</td></tr>
+    <tr><td class="muted">Terms</td><td>Net 30</td></tr>
+    <tr><td class="muted">Due</td><td>{{ due_str }}</td></tr>
+    {% if po %}<tr><td class="muted">PO #</td><td>{{ po }}</td></tr>{% endif %}
+  </table></div>
+</div>
+<table class="items" style="margin-top:16px">
+  <tr><th>Item</th><th>Description</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr>
+  {% for l in lines %}<tr><td>{{ loop.index }}</td><td>{{ l.desc }}</td><td class="r">{{ l.qty }}</td><td class="r">{{ fmt(l.unit) }}</td><td class="r">{{ fmt(l.total) }}</td></tr>{% endfor %}
+</table>
+<div class="due"><table>
+  <tr><td>Subtotal</td><td class="r">{{ fmt(subtotal) }}</td></tr>
+  <tr><td>{{ v.tax_label }}</td><td class="r">{{ fmt(tax) }}</td></tr>
+  <tr class="grand"><td>Balance Due</td><td class="r">{{ sym }}{{ fmt(total) }} {{ v.currency }}</td></tr>
+</table></div>
+<p class="small muted" style="margin-top:22px">{{ v.payment_note }}<br>Thank you for your business.</p>
+<div style="margin-top:20px"><span class="sig">{{ signer }}</span><div class="small muted">Authorized signature</div></div>
+{% endblock %}

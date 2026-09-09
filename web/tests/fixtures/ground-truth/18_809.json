@@ -1,0 +1,48 @@
+{
+  "file": "18_809.pdf",
+  "template": "thermal_receipt.html",
+  "scanned": "flatbed",
+  "vendor": "Saltmarsh Coffee Roasters",
+  "invoice_number": "809",
+  "invoice_date": "2025-04-30",
+  "due_date": null,
+  "currency": "USD",
+  "subtotal": 537.72,
+  "tax": 47.72,
+  "total": 585.44,
+  "line_items": [
+    {
+      "description": "Cold brew 5L",
+      "qty": 6,
+      "unit_price": null,
+      "amount": 154.66
+    },
+    {
+      "description": "Single origin 250g",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 23.8
+    },
+    {
+      "description": "Single origin 250g",
+      "qty": 10,
+      "unit_price": null,
+      "amount": 293.2
+    },
+    {
+      "description": "Cold brew 5L",
+      "qty": 2,
+      "unit_price": null,
+      "amount": 71.64
+    },
+    {
+      "description": "Single origin 250g",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 4.42
+    }
+  ],
+  "planted": [
+    "line_sum_mismatch"
+  ]
+}

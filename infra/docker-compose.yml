@@ -1,0 +1,48 @@
+# One command from a clean clone:  docker compose -f infra/docker-compose.yml up
+# Postgres is the only stateful piece. The web image is the built Vite bundle behind
+# nginx, which also proxies /api to the api container, so the browser sees one origin.
+name: invoice-provenance
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: invoice_provenance
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d invoice_provenance"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/invoice_provenance
+      WORKSPACE_TOKEN: ${WORKSPACE_TOKEN:-dev-token-change-me}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    # Migrate, then serve. A failed migration stops the container instead of serving a schema mismatch.
+    command: sh -c "alembic -c /db/alembic.ini upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:

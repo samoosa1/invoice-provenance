@@ -1,0 +1,52 @@
+{
+  "file": "23_AF-00503.pdf",
+  "template": "statement.html",
+  "scanned": "flatbed",
+  "vendor": "Amberlake Facilities",
+  "invoice_number": "AF-00503",
+  "invoice_date": "2025-07-12",
+  "due_date": "2025-08-11",
+  "currency": "AUD",
+  "subtotal": 4215.98,
+  "tax": 421.6,
+  "total": 4637.58,
+  "line_items": [
+    {
+      "description": "Cleaning, weekly",
+      "qty": 1,
+      "unit_price": 27.61,
+      "amount": 27.61
+    },
+    {
+      "description": "Security patrol, nights",
+      "qty": 3,
+      "unit_price": 309.87,
+      "amount": 929.61
+    },
+    {
+      "description": "Waste collection",
+      "qty": 1,
+      "unit_price": 287.04,
+      "amount": 287.04
+    },
+    {
+      "description": "Grounds maintenance",
+      "qty": 1,
+      "unit_price": 462.74,
+      "amount": 462.74
+    },
+    {
+      "description": "Grounds maintenance",
+      "qty": 3,
+      "unit_price": 218.58,
+      "amount": 655.74
+    },
+    {
+      "description": "Grounds maintenance",
+      "qty": 4,
+      "unit_price": 463.31,
+      "amount": 1853.24
+    }
+  ],
+  "planted": []
+}

@@ -1,0 +1,22 @@
+{
+  "file": "08_NW-214.pdf",
+  "template": "us_letter.html",
+  "scanned": "",
+  "vendor": "Nordway Logistics",
+  "invoice_number": "NW-214",
+  "invoice_date": "2025-04-21",
+  "due_date": "2025-05-21",
+  "currency": "USD",
+  "subtotal": 159.62,
+  "tax": 0.0,
+  "total": 159.62,
+  "line_items": [
+    {
+      "description": "Freight, regional route",
+      "qty": 2,
+      "unit_price": 79.81,
+      "amount": 159.62
+    }
+  ],
+  "planted": []
+}

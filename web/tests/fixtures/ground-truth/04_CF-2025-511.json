@@ -1,0 +1,40 @@
+{
+  "file": "04_CF-2025-511.pdf",
+  "template": "minimal_freelancer.html",
+  "scanned": "",
+  "vendor": "Cedar & Finch Consulting",
+  "invoice_number": "CF-2025-511",
+  "invoice_date": "2025-01-10",
+  "due_date": null,
+  "currency": "USD",
+  "subtotal": null,
+  "tax": 0.0,
+  "total": 3820.96,
+  "line_items": [
+    {
+      "description": "Process review, days",
+      "qty": 4,
+      "unit_price": null,
+      "amount": 1199.16
+    },
+    {
+      "description": "Report drafting",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 211.86
+    },
+    {
+      "description": "Process review, days",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 419.74
+    },
+    {
+      "description": "Process review, days",
+      "qty": 12,
+      "unit_price": null,
+      "amount": 1990.2
+    }
+  ],
+  "planted": []
+}

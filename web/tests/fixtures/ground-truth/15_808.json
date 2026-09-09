@@ -1,0 +1,40 @@
+{
+  "file": "15_808.pdf",
+  "template": "thermal_receipt.html",
+  "scanned": "flatbed",
+  "vendor": "Saltmarsh Coffee Roasters",
+  "invoice_number": "808",
+  "invoice_date": "2025-07-21",
+  "due_date": null,
+  "currency": "USD",
+  "subtotal": 164.85,
+  "tax": 14.63,
+  "total": 179.48,
+  "line_items": [
+    {
+      "description": "Filter papers",
+      "qty": 3,
+      "unit_price": null,
+      "amount": 21.21
+    },
+    {
+      "description": "Single origin 250g",
+      "qty": 6,
+      "unit_price": null,
+      "amount": 85.14
+    },
+    {
+      "description": "Espresso blend 1kg",
+      "qty": 1,
+      "unit_price": null,
+      "amount": 20.94
+    },
+    {
+      "description": "Oat milk case",
+      "qty": 6,
+      "unit_price": null,
+      "amount": 37.56
+    }
+  ],
+  "planted": []
+}
