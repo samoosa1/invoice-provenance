@@ -8,7 +8,7 @@
   "due_date": null,
   "currency": "USD",
   "subtotal": null,
-  "tax": 0.0,
+  "tax": null,
   "total": 3820.96,
   "line_items": [
     {

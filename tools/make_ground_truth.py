@@ -2,8 +2,10 @@
 invoices across six layouts, about a third run through a scan simulation,
 plus a JSON truth file per invoice with every printed field and line item.
 
-Truth records only what the layout PRINTS. A template with no due date has
-`"due_date": null`; the correct extractor answer there is `not_found`, and
+Truth records only what the layout PRINTS, per document rather than per
+template: a layout with no due date has `"due_date": null`, and a layout that
+prints its tax row only for a non-zero rate has `"tax": null` on a zero-rate
+vendor; the correct extractor answer there is `not_found`, and
 reporting a date would count as a false positive.
 
 Planted faults (the extractor must flag these, not silently pass):
@@ -19,6 +21,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import shutil
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -51,6 +54,30 @@ PRINTS = {
 }
 
 
+# Chromium stamps a wall-clock /CreationDate into every PDF it writes and pymupdf
+# stamps a random /ID, so a regenerated sample set differed in all 25 files while
+# being content-identical. That churn hides real changes and makes "regenerate,
+# then read git status" a useless verification. The accuracy baseline is measured
+# against these exact files, so they are frozen instead.
+FIXED_PDF_DATE = b"D:20250106000000+00'00'"
+_PDF_DATE = re.compile(rb"D:\d{14}\+\d{2}'\d{2}'")
+# pymupdf, which writes the scan variants, puts a random pair of 32-hex-digit
+# file identifiers in the trailer. Same problem as the dates, same fixed width.
+_PDF_ID = re.compile(rb"/ID\s*\[\s*<[0-9A-Fa-f]{32}>\s*<[0-9A-Fa-f]{32}>\s*\]")
+_FIXED_ID = b"/ID[<" + b"0" * 32 + b"><" + b"1" * 32 + b">]"
+
+
+def freeze_pdf_nondeterminism(path: Path) -> None:
+    """Both replacements preserve length, so every xref offset stays valid;
+    re-serialising through a PDF library would not guarantee that."""
+    raw = path.read_bytes()
+    frozen = _PDF_DATE.sub(FIXED_PDF_DATE, raw)
+    frozen = _PDF_ID.sub(lambda m: _FIXED_ID + b" " * (len(m.group(0)) - len(_FIXED_ID)), frozen)
+    assert len(frozen) == len(raw), "replacement changed the file length; xref offsets would break"
+    if frozen != raw:
+        path.write_bytes(frozen)
+
+
 @dataclass
 class LineTruth:
     description: str
@@ -70,7 +97,7 @@ class Truth:
     due_date: str | None
     currency: str
     subtotal: float | None
-    tax: float
+    tax: float | None
     total: float
     line_items: list[LineTruth]
     planted: list[str] = field(default_factory=list)
@@ -113,6 +140,12 @@ def build(v: Vendor, counter: int, d: date, *, fault: str | None) -> tuple[dict,
     number = v.numbering.format(n=counter)
     due = d + timedelta(days=rng.choice([14, 30, 30, 45]))
     p = PRINTS[v.template]
+    # Printedness is per-DOCUMENT, not per-template: minimal_freelancer.html wraps
+    # its tax row in `{% if tax %}`, so a zero-rate vendor there prints no tax
+    # label and no tax value. Recording 0.0 anyway would score a correct
+    # `not_found` as a miss. Every other layout prints the row unconditionally,
+    # including us_letter at 0.00, which is a real printed zero.
+    prints_tax = v.tax_rate > 0 or v.template != "minimal_freelancer.html"
     ctx = dict(v=v, buyer=BUYER, number=number, date_str=d.strftime(v.date_format), due_str=due.strftime(v.date_format),
                lines=lines, subtotal=subtotal, tax=tax, total=total, fmt=money(v.number_format), sym=v.symbol,
                credit_note=False, po=(f"PO-{rng.randint(4000, 4999)}" if rng.random() < 0.4 else None),
@@ -124,7 +157,7 @@ def build(v: Vendor, counter: int, d: date, *, fault: str | None) -> tuple[dict,
     truth = Truth(
         file="", template=v.template, scanned="", vendor=v.name, invoice_number=number, invoice_date=d.isoformat(),
         due_date=due.isoformat() if p["due"] else None, currency=v.currency,
-        subtotal=subtotal if p["subtotal"] else None, tax=tax, total=total,
+        subtotal=subtotal if p["subtotal"] else None, tax=tax if prints_tax else None, total=total,
         line_items=[LineTruth(l["desc"][:20] if v.template == "thermal_receipt.html" else l["desc"],
                               l["qty"] if p["qty"] else None, l["unit"] if p["unit"] else None, l["total"]) for l in lines],
         planted=[fault] if fault else [],
@@ -167,6 +200,7 @@ def main() -> None:
                 out.rename(tmp)
                 scanify(tmp, out, rng, mode=scanned)
                 tmp.unlink()
+            freeze_pdf_nondeterminism(out)
             t.file, t.scanned = fname, scanned
             truths.append(t)
             (TRUTH_OUT / f"{out.stem}.json").write_text(json.dumps(asdict(t), indent=2, ensure_ascii=False) + "\n")
