@@ -26,6 +26,11 @@ tools/  Synthetic ground-truth generator (extends ledger-reconciler's sample_gen
 docker compose -f infra/docker-compose.yml up
 ```
 
+Two environment variables matter for anything but local development: `WORKSPACE_TOKEN`
+(the single shared token the browser sends as `X-Workspace-Token`; one workspace, not
+multi-tenant) and `APP_ENV`. With `APP_ENV` set to anything other than `dev`, the api refuses
+to start on the default token. Set both when deploying.
+
 ## Ground truth
 
 The accuracy table is measured against synthetic invoices produced by `tools/make_ground_truth.py`.

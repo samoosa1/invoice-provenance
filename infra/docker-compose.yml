@@ -30,6 +30,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/invoice_provenance
       WORKSPACE_TOKEN: ${WORKSPACE_TOKEN:-dev-token-change-me}
+      # Anything but "dev" refuses to start on the default token above.
+      APP_ENV: ${APP_ENV:-dev}
     depends_on:
       postgres:
         condition: service_healthy
