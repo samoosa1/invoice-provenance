@@ -493,3 +493,42 @@ td.file .tag { margin-left: var(--sp-2); }
   .bone { animation: none; opacity: 0.6; }
   .highlight, .cell, .dropzone, .btn, table.grid tbody tr { transition: none; }
 }
+
+/* ============================ coverage line ============================ */
+.coverage { margin-bottom: var(--sp-4); }
+.coverage p { color: var(--muted); font-size: var(--t-data); margin-bottom: var(--sp-2); }
+.buckets { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); font-size: var(--t-ui); font-variant-numeric: tabular-nums; }
+.buckets li { display: flex; gap: var(--sp-2); align-items: center; }
+.buckets .bad { color: var(--bad); }
+.tag.human { background: var(--accent-wash); color: var(--accent); }
+.cell.human { text-decoration: underline dotted var(--accent); text-underline-offset: 3px; }
+.actions { display: flex; gap: var(--sp-2); }
+.btn.small { padding: 4px 10px; font-size: var(--t-micro); }
+.btn.primary { background: var(--action); color: var(--on-action); border-color: var(--action); font-weight: var(--w-label); }
+.btn.primary:hover { background: var(--action-hover); border-color: var(--action-hover); }
+
+/* ============================ review queue ============================ */
+.review h3 { font-size: var(--t-ui); font-weight: var(--w-label); letter-spacing: var(--tr-micro); margin: 0 0 var(--sp-3); display: flex; gap: var(--sp-3); align-items: baseline; }
+.review h3 .faint { font-weight: var(--w-body); }
+.review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
+.review-item { border: 1px solid var(--line-soft); border-radius: 3px; padding: var(--sp-2) var(--sp-3); display: grid; gap: var(--sp-2); }
+.review-item.focused { border-color: var(--accent-edge); background: var(--accent-wash); }
+.review-target { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; background: none; border: 0; padding: 0; color: inherit; font: inherit; font-size: var(--t-data); cursor: pointer; text-align: left; }
+.review-target .clip { max-width: 20ch; }
+.review-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.review-type { display: flex; gap: var(--sp-1); }
+.review-type input {
+  font: inherit;
+  font-size: var(--t-ui);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  padding: 3px 8px;
+  width: 16ch;
+  min-width: 0;
+}
+.review-type input::placeholder { color: var(--faint); }
+.review .notice { margin: 0; }
+.review-absent { margin-top: var(--sp-3); }
+.review-absent summary { color: var(--muted); font-size: var(--t-ui); cursor: pointer; margin-bottom: var(--sp-2); }

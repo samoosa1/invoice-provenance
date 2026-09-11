@@ -3,11 +3,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { coverageLine, coverageOf } from './domain/coverage'
 import type { Field } from './domain/types'
-import { ApiError, getRun, persistRun, type RunSummary } from './lib/api'
+import { ApiError, getRun, persistRun, postCorrection, type CorrectionAction, type PersistedRun, type RunSummary } from './lib/api'
+import { downloadCsv, downloadXlsx } from './lib/export'
+import { CoverageLine } from './ui/CoverageLine'
 import { DropZone } from './ui/DropZone'
 import { FieldTable, type Selection } from './ui/FieldTable'
 import { LineItemTable } from './ui/LineItemTable'
 import { PageViewer } from './ui/PageViewer'
+import { ReviewQueue, type ReviewItem } from './ui/ReviewQueue'
 import { readDocument, loadSampleFiles, type ExtractedDocument } from './ui/pipeline'
 
 type Stage = 'idle' | 'reading' | 'results'
@@ -23,7 +26,7 @@ export default function App() {
   const [selection, setSelection] = useState<Selection>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [saved, setSaved] = useState<{ id: string } | { error: string } | null>(null)
+  const [saved, setSaved] = useState<PersistedRun | { error: string } | null>(null)
   const [lastRun, setLastRun] = useState<RunSummary | null>(null)
 
   // What survived the last refresh: the most recent run this browser
@@ -77,9 +80,9 @@ export default function App() {
       if (read.length > 0) {
         setSelection({ doc: 0, name: 'total' })
         try {
-          const id = await persistRun(read, CLIENT_VERSION)
-          localStorage.setItem(LAST_RUN_KEY, id)
-          setSaved({ id })
+          const persisted = await persistRun(read, CLIENT_VERSION)
+          localStorage.setItem(LAST_RUN_KEY, persisted.runId)
+          setSaved(persisted)
         } catch (e) {
           setSaved({ error: e instanceof ApiError ? e.message : `API unreachable: ${e instanceof Error ? e.message : String(e)}` })
         }
@@ -101,6 +104,30 @@ export default function App() {
   }, [start])
 
   const selectHeader = useCallback((doc: number, name: string) => setSelection({ doc, name }), [])
+
+  const persisted = saved && 'runId' in saved ? saved : null
+
+  // One ruling: POST it, then replace the field in place with what the
+  // server now holds (source human), so the table, the coverage line and
+  // the queue all move together from the same object.
+  const rule = useCallback(
+    async (item: ReviewItem, action: CorrectionAction, value: string | null) => {
+      if (!persisted) throw new Error('The run was not saved, so the ruling has nowhere to go.')
+      const fieldId = persisted.fieldIds[item.doc]?.[item.index]
+      if (!fieldId) throw new Error(`No server id for ${item.field.name}`)
+      const { field } = await postCorrection(fieldId, action, value)
+      setDocs((prev) => prev.map((d, i) => (i === item.doc ? { ...d, fields: d.fields.map((f, j) => (j === item.index ? field : f)) } : d)))
+    },
+    [persisted],
+  )
+
+  const reviewItems = useMemo<ReviewItem[]>(
+    () =>
+      docs.flatMap((d, doc) =>
+        d.fields.flatMap((field, index) => (field.state !== 'read' && field.source !== 'human' ? [{ doc, fileName: d.fileName, index, field }] : [])),
+      ),
+    [docs],
+  )
 
   const allFields = useMemo(() => docs.flatMap((d) => d.fields), [docs])
   const coverage = useMemo(() => (allFields.length ? coverageOf(allFields) : null), [allFields])
@@ -151,21 +178,27 @@ export default function App() {
           <>
             <div className="stage-head">
               <h2>{stage === 'reading' ? `Reading ${docs.length + pending} document${docs.length + pending === 1 ? '' : 's'}` : `${docs.length} document${docs.length === 1 ? '' : 's'}`}</h2>
-              {coverage && (
-                <p className="coverage mono" aria-live="polite">
-                  {coverageLine(coverage)}
-                </p>
+              {stage === 'results' && docs.length > 0 && (
+                <div className="actions">
+                  <button type="button" className="btn small" onClick={() => downloadCsv(docs)}>
+                    Export CSV
+                  </button>
+                  <button type="button" className="btn small" onClick={() => void downloadXlsx(docs)}>
+                    Export .xlsx
+                  </button>
+                </div>
               )}
             </div>
+            {coverage && <CoverageLine coverage={coverage} />}
 
             {saved && (
-              <p className={`notice ${'id' in saved ? 'ok' : 'warn'}`} role="status">
-                {'id' in saved ? (
+              <p className={`notice ${persisted ? 'ok' : 'warn'}`} role="status">
+                {persisted ? (
                   <>
-                    Run saved to Postgres as <span className="mono">{saved.id.slice(0, 8)}</span>. Refresh the page: it is still there.
+                    Run saved to Postgres as <span className="mono">{persisted.runId.slice(0, 8)}</span>. Refresh the page: it is still there.
                   </>
                 ) : (
-                  <>Run not saved: {saved.error}. The extraction above is complete regardless.</>
+                  <>Run not saved: {'error' in saved ? saved.error : ''}. The extraction above is complete regardless.</>
                 )}
               </p>
             )}
@@ -180,6 +213,15 @@ export default function App() {
                     </h3>
                     <LineItemTable fields={selectedDoc.fields} selectedName={selection?.name ?? null} onSelect={(name) => setSelection({ doc: selection!.doc, name })} />
                   </section>
+                )}
+                {stage === 'results' && (
+                  <ReviewQueue
+                    items={reviewItems}
+                    canPersist={persisted !== null}
+                    onRule={rule}
+                    onFocus={(item) => setSelection({ doc: item.doc, name: item.field.name })}
+                    focused={selection}
+                  />
                 )}
               </div>
               <aside className="viewer-pane">

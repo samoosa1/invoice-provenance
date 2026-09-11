@@ -6,6 +6,7 @@
 import type { Field } from '../domain/types'
 
 export function stateTitle(f: Field): string {
+  if (f.source === 'human') return f.value === null ? 'A person ruled it unreadable. Saved with source: human.' : 'Ruled by a person in review. Saved with source: human.'
   switch (f.state) {
     case 'read':
       return f.source === 'ocr'

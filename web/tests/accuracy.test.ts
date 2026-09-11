@@ -137,6 +137,19 @@ describe('the run: 20 text-layer samples against ground truth', () => {
     mkdirSync(out, { recursive: true })
     writeFileSync(new URL('accuracy.txt', out), `${new Date().toISOString().slice(0, 10)}  20 text-layer documents\n\n${table}\n`)
 
+    // The regression gate: no field's precision or recall may drop below the
+    // committed baseline. Raising the baseline is a deliberate commit that
+    // edits fixtures/baseline.json; lowering it is what this test refuses.
+    const baseline = JSON.parse(readFileSync(new URL('./fixtures/baseline.json', import.meta.url), 'utf8')) as Record<string, { precision: number | null; recall: number | null } | string>
+    for (const r of rows) {
+      const b = baseline[r.field]
+      expect(b, `baseline.json has no entry for ${r.field}`).toBeDefined()
+      if (typeof b === 'string') throw new Error(`baseline entry for ${r.field} is not an object`)
+      if (b.precision !== null) expect(r.precision, `${r.field} precision fell below baseline ${b.precision}`).toBeGreaterThanOrEqual(b.precision)
+      if (b.recall !== null) expect(r.recall, `${r.field} recall fell below baseline ${b.recall}`).toBeGreaterThanOrEqual(b.recall)
+    }
+    expect(Object.keys(baseline).filter((k) => !k.startsWith('_')).sort()).toEqual(rows.map((r) => r.field).sort())
+
     // Task 0: two documents print no tax line (truth null). Whatever the
     // extractor does there is measured, never skipped.
     const tax = row(rows, 'tax')

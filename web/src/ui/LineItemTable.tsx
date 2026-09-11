@@ -42,8 +42,10 @@ export function LineItemTable({ fields, selectedName, onSelect }: Props) {
                   const selected = selectedName === f.name
                   return (
                     <td key={column} className={column === 'description' ? undefined : 'num'}>
-                      <button type="button" className={`cell ${f.state}${selected ? ' selected' : ''}`} title={stateTitle(f)} aria-pressed={selected} onClick={() => onSelect(f.name)}>
-                        {f.state === 'read' ? (
+                      <button type="button" className={`cell ${f.source === 'human' ? 'human' : f.state}${selected ? ' selected' : ''}`} title={stateTitle(f)} aria-pressed={selected} onClick={() => onSelect(f.name)}>
+                        {f.source === 'human' ? (
+                          f.value === null ? <span className="tag human">unreadable</span> : <span className={column === 'description' ? undefined : 'mono'}>{f.value}</span>
+                        ) : f.state === 'read' ? (
                           <span className={column === 'description' ? undefined : 'mono'}>{f.value}</span>
                         ) : f.state === 'uncertain' ? (
                           <span className="tag warn">uncertain</span>

@@ -1,0 +1,51 @@
+{
+  "_note": "Per-field floors from the 20 text-layer sample_gen documents, 11.09.2026. tests/accuracy.test.ts fails if a run drops below any of them; raise deliberately, never lower.",
+  "invoice_number": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "vendor": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "invoice_date": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "due_date": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "currency": {
+    "precision": 1.0,
+    "recall": 0.9
+  },
+  "subtotal": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "tax": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "total": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "description": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "qty": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "unit_price": {
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "amount": {
+    "precision": 1.0,
+    "recall": 1.0
+  }
+}

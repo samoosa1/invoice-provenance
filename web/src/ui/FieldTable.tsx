@@ -70,12 +70,18 @@ const Row = memo(function Row({ index, doc, selectedName, onSelect }: RowProps) 
           <td key={name} className={MONEY.has(name) ? 'num' : undefined}>
             <button
               type="button"
-              className={`cell ${f.state}${selected ? ' selected' : ''}${f.provenance ? '' : ' noloc'}`}
+              className={`cell ${f.source === 'human' ? 'human' : f.state}${selected ? ' selected' : ''}${f.provenance ? '' : ' noloc'}`}
               title={stateTitle(f)}
               aria-pressed={selected}
               onClick={() => onSelect(index, name)}
             >
-              {f.state === 'read' ? (
+              {f.source === 'human' ? (
+                f.value === null ? (
+                  <span className="tag human">unreadable</span>
+                ) : (
+                  <span className={MONEY.has(name) || name === 'invoice_date' || name === 'due_date' ? 'mono' : undefined}>{f.value}</span>
+                )
+              ) : f.state === 'read' ? (
                 <span className={MONEY.has(name) || name === 'invoice_date' || name === 'due_date' ? 'mono' : undefined}>{f.value}</span>
               ) : (
                 <span className={`tag ${f.state === 'uncertain' ? 'warn' : 'idle'}`}>{f.state === 'uncertain' ? 'uncertain' : 'not found'}</span>

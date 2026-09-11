@@ -77,26 +77,56 @@ function toWire(f: Field) {
  * with its own coverage line. Sequential: the API is one transaction per
  * call and the point is a readable failure, not throughput.
  */
-export async function persistRun(docs: PersistableDocument[], clientVersion: string): Promise<string> {
+export type PersistedRun = {
+  runId: string
+  /** fieldIds[d][i] is the server id of docs[d].fields[i]. */
+  fieldIds: string[][]
+}
+
+export async function persistRun(docs: PersistableDocument[], clientVersion: string): Promise<PersistedRun> {
   const all = docs.flatMap((d) => d.fields)
   const { id: runId } = await call<{ id: string }>('POST', '/api/runs', {
     n_documents: docs.length,
     client_version: clientVersion,
     coverage: coverageOf(all),
   })
+  const fieldIds: string[][] = []
   for (const d of docs) {
     const { id: documentId } = await call<{ id: string }>('POST', `/api/runs/${runId}/documents`, {
       fingerprint: d.fingerprint,
       file_name: d.fileName,
       page_count: d.pageCount,
     })
-    await call('POST', `/api/runs/${runId}/fields`, {
+    const { ids } = await call<{ written: number; ids: string[] }>('POST', `/api/runs/${runId}/fields`, {
       document_id: documentId,
       coverage: coverageOf(d.fields),
       fields: d.fields.map(toWire),
     })
+    fieldIds.push(ids)
   }
-  return runId
+  return { runId, fieldIds }
+}
+
+export type CorrectionAction = 'accept' | 'correct' | 'unreadable'
+
+type WireField = ReturnType<typeof toWire> & { id: string }
+
+/** One review ruling. Returns the field as the server now holds it and the run's recounted coverage. */
+export async function postCorrection(fieldId: string, action: CorrectionAction, value: string | null): Promise<{ field: Field; runCoverage: Coverage }> {
+  const out = await call<{ field: WireField; run_coverage: Coverage }>('POST', `/api/fields/${fieldId}/corrections`, { action, value })
+  const f = out.field
+  return {
+    field: {
+      name: f.name,
+      value: f.value,
+      state: f.state,
+      source: f.source,
+      provenance: f.page !== null && f.bbox ? { page: f.page, bbox: f.bbox } : null,
+      confidence: f.confidence,
+      candidates: f.candidates,
+    },
+    runCoverage: out.run_coverage,
+  }
 }
 
 export function getRun(runId: string): Promise<RunSummary> {
