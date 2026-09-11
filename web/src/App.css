@@ -200,3 +200,296 @@ body {
   outline-offset: 2px;
   border-radius: 2px;
 }
+
+/* ============================ shell ============================ */
+/* Single screen: controls on the left, output on the right. Nothing
+   navigates away, so the visitor never loses sight of what they dropped. */
+.shell {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) 1fr;
+}
+.rail {
+  border-right: 1px solid var(--line-soft);
+  padding: var(--sp-6) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100svh;
+  overflow-y: auto;
+}
+.stage {
+  padding: var(--sp-6) var(--sp-6) var(--sp-7);
+  min-width: 0; /* lets wide tables scroll instead of blowing out the grid */
+}
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line-soft); }
+  .stage { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+}
+
+/* ============================ masthead ============================ */
+.masthead h1 {
+  font-family: var(--display);
+  font-size: var(--t-h1);
+  font-weight: var(--w-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--tr-h1);
+  margin: 0 0 var(--sp-3);
+  text-wrap: balance;
+}
+.masthead p {
+  color: var(--muted);
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  max-width: 40ch;
+  text-wrap: pretty;
+}
+.privacy {
+  font-size: var(--t-body);
+  color: var(--muted);
+  border-top: 1px solid var(--line-soft);
+  padding-top: var(--sp-4);
+}
+.privacy strong { color: var(--ink); font-weight: var(--w-label); }
+.lastrun { font-size: var(--t-ui); }
+
+/* ============================ drop zone ============================ */
+/* Tinted at rest, not just on hover: this is the one thing the page asks. */
+.dropzone {
+  width: 100%;
+  color: inherit;
+  border: 1px dashed var(--accent-edge);
+  background: var(--accent-wash);
+  border-radius: 3px;
+  padding: var(--sp-7) var(--sp-4);
+  text-align: center;
+  cursor: pointer;
+  display: grid;
+  gap: var(--sp-1);
+  font: inherit;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.dropzone:hover { border-color: var(--accent); background: oklch(0.755 0.155 278 / 0.24); }
+.dropzone.over { border-color: var(--accent); background: var(--accent-wash); border-style: solid; }
+.dropzone.busy { opacity: 0.5; cursor: default; }
+.drop-title { font-size: var(--t-lead); font-weight: var(--w-display); letter-spacing: -0.01em; }
+.drop-sub { color: var(--muted); font-size: var(--t-ui); margin-top: var(--sp-2); text-wrap: pretty; }
+.drop-alt { margin-top: var(--sp-3); font-size: var(--t-ui); color: var(--muted); text-align: center; }
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link-btn:hover { color: var(--accent-hover); }
+.link-btn:disabled { color: var(--faint); cursor: default; text-decoration: none; }
+
+/* ============================ stage states ============================ */
+.empty { max-width: 64ch; width: 100%; }
+.stage:has(.empty) { display: grid; align-content: center; justify-content: center; }
+.shell:has(.empty) .dropzone { min-height: 40svh; place-content: center; }
+.empty h2 {
+  font-family: var(--display);
+  font-weight: var(--w-display);
+  font-size: var(--t-h2);
+  line-height: var(--lh-h2);
+  margin: 0 0 var(--sp-5);
+  letter-spacing: var(--tr-h2);
+}
+.empty ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-4); }
+.empty li { display: grid; grid-template-columns: 8rem 1fr; gap: var(--sp-3); align-items: baseline; }
+.empty li .tag { justify-self: start; }
+.empty li .detail { grid-column: 2; color: var(--muted); font-size: var(--t-body); }
+@media (max-width: 560px) {
+  .empty li { grid-template-columns: 1fr; gap: var(--sp-1); }
+  .empty li .detail { grid-column: 1; }
+}
+
+.stage-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.stage-head h2 {
+  font-family: var(--display);
+  font-weight: var(--w-display);
+  font-size: var(--t-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--tr-h2);
+  margin: 0;
+}
+.coverage { color: var(--muted); font-size: var(--t-data); }
+.muted { color: var(--muted); font-size: var(--t-ui); }
+.faint { color: var(--faint); }
+
+/* ============================ results layout ============================ */
+/* Table and page side by side; the page gets a fixed share so a click on
+   a value never reflows the table. Below 1100px they stack, the viewer
+   first because it is what the click is for. */
+.results {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 34%);
+  gap: var(--sp-6);
+  align-items: start;
+}
+.tables { min-width: 0; display: grid; gap: var(--sp-6); }
+.viewer-pane { position: sticky; top: var(--sp-5); min-width: 0; }
+@media (max-width: 1100px) {
+  .results { grid-template-columns: 1fr; }
+  .viewer-pane { position: static; order: -1; }
+}
+.lineitems h3 {
+  font-size: var(--t-ui);
+  font-weight: var(--w-label);
+  letter-spacing: var(--tr-micro);
+  margin: 0 0 var(--sp-3);
+  display: flex;
+  gap: var(--sp-3);
+  align-items: baseline;
+}
+.lineitems h3 .faint { font-weight: var(--w-body); font-family: var(--mono); font-size: var(--t-micro); }
+
+/* ============================ tables ============================ */
+.table-scroll { overflow-x: auto; }
+table.grid { width: 100%; border-collapse: collapse; font-size: var(--t-data); }
+table.grid th {
+  text-align: left;
+  font-size: var(--t-micro);
+  font-weight: var(--w-label);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 0 var(--sp-2) var(--sp-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+table.grid td { padding: var(--sp-1) var(--sp-2); border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+table.grid tbody tr { transition: background var(--dur) var(--ease); }
+table.grid tbody tr:hover { background: var(--surface); }
+.num { text-align: right; }
+.mono { font-family: var(--mono); font-size: var(--t-micro); white-space: nowrap; }
+.clip { display: inline-block; max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+td.file { white-space: nowrap; }
+td.file .tag { margin-left: var(--sp-2); }
+
+/* A cell is a button: keyboard-reachable, and its pressed state is the
+   selection. Transparent until hovered so the table reads as a table. */
+.cell {
+  display: inline-block;
+  max-width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 3px 6px;
+  margin: -1px -6px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: inherit;
+  white-space: nowrap;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.cell:hover { background: var(--raised); }
+.cell.selected { border-color: var(--accent); background: var(--accent-wash); }
+.cell.noloc { cursor: default; }
+.cell .tag { margin: 0; }
+
+/* ============================ skeleton rows ============================ */
+/* A row that is still being read holds its space so the table does not
+   jump as documents arrive. Opacity pulse only: no layout, no paint. */
+.bone {
+  display: inline-block;
+  height: 0.9em;
+  border-radius: 2px;
+  background: var(--raised);
+  animation: pulse 1.2s var(--ease) infinite;
+}
+@keyframes pulse { 50% { opacity: 0.4; } }
+
+/* ============================ page viewer ============================ */
+.viewer { position: relative; width: 100%; line-height: 0; background: var(--surface); border-radius: 3px; overflow: hidden; }
+.viewer canvas.page { display: block; width: 100%; height: auto; }
+.viewer-empty { aspect-ratio: 210 / 297; background: var(--surface); border-radius: 3px; }
+.viewer-caption { margin-bottom: var(--sp-2); line-height: var(--lh-tight); }
+.viewer-caption strong { color: var(--ink); font-family: var(--mono); font-size: var(--t-micro); font-weight: var(--w-medium); }
+/* transform-only: moving between fields costs a composite, never a layout. */
+.highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  border: 2px solid var(--accent);
+  background: var(--accent-wash);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--bg);
+  pointer-events: none;
+  will-change: transform;
+  transition: transform 260ms var(--ease);
+}
+
+/* ============================ status ============================ */
+.tag {
+  display: inline-block;
+  font-size: var(--t-micro);
+  font-weight: var(--w-medium);
+  padding: 2px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.tag.ok { background: var(--ok-wash); color: var(--ok); }
+.tag.warn { background: var(--warn-wash); color: var(--warn); }
+.tag.bad { background: var(--bad-wash); color: var(--bad); }
+.tag.idle { background: var(--raised); color: var(--muted); }
+.tag.live { background: var(--accent-wash); color: var(--accent); }
+
+.notice {
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: 3px;
+  font-size: var(--t-ui);
+  margin-bottom: var(--sp-4);
+  border: 1px solid;
+  max-width: 80ch;
+}
+.notice.ok { background: var(--ok-wash); border-color: transparent; color: var(--ok); }
+.notice.warn { background: var(--warn-wash); border-color: transparent; color: var(--warn); }
+.notice.bad { background: var(--bad-wash); border-color: transparent; color: var(--bad); }
+.notice .mono { color: inherit; }
+
+.btn {
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 8px 15px;
+  font: inherit;
+  font-size: var(--t-ui);
+  font-weight: var(--w-medium);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.btn:hover { border-color: var(--faint); background: var(--surface); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+
+/* ============================ motion ============================ */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise var(--dur) var(--ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; opacity: 1; transform: none; }
+  .bone { animation: none; opacity: 0.6; }
+  .highlight, .cell, .dropzone, .btn, table.grid tbody tr { transition: none; }
+}

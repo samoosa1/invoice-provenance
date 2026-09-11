@@ -167,7 +167,12 @@ function headerRows(page: PdfPage): Row[] | null {
 
 const THERMAL_ROW = new RegExp(String.raw`^(\d+)\s+(\S.*?\S)\s+` + MONEY + String.raw`$`, 'd')
 const MINIMAL_ROW = new RegExp(String.raw`^(\S.*?\S)(?:\s+x(\d+))?\s+` + MONEY + String.raw`$`, 'd')
-const HEADERLESS_ANCHOR = /^\s*(?:sub\s*-?\s*total|total)\b/i
+/** The first totals line; the item block sits directly above it. A subtotal
+ * label counts wherever it sits on the line: on the scanned 13_PH-2025-0215
+ * OCR glues "Goods/services total 889,86 EUR" onto the end of the "Amount
+ * in words" line, and anchoring on "Total payable" further down made the
+ * "Notes:" line between them a row. */
+const HEADERLESS_ANCHOR = /^\s*(?:sub\s*-?\s*total|total)\b|\bsub\s*-?\s*total\b|goods\s*\/\s*services\s*total/i
 
 type Indexed = RegExpExecArray & { indices: Array<[number, number] | undefined> }
 
@@ -207,8 +212,12 @@ function headerlessRows(page: PdfPage): Row[] {
   const rows: Row[] = []
   for (let i = anchor - 1; i >= 0; i--) {
     // A tax line between the items and the total (minimal_freelancer prints
-    // "MVA 25% 1070.73" there) reads as a row; it belongs to the totals block.
-    if (TOTALS_STOP.test(lines[i].text)) continue
+    // "MVA 25% 1070.73" there) belongs to the totals block: skipped while no
+    // row has been found yet, and the end of the block once one has.
+    if (TOTALS_STOP.test(lines[i].text)) {
+      if (rows.length === 0) continue
+      break
+    }
     const row = headerlessRow(lines[i])
     if (!row || row.amount.state !== 'read') break
     rows.unshift(row)

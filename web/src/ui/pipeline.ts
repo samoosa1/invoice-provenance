@@ -44,14 +44,27 @@ function toHex(digest: ArrayBuffer): string {
     .join('')
 }
 
-export async function readDocument(file: File): Promise<{
+export type ExtractedDocument = {
   fileName: string
   fingerprint: string
   pageCount: number
   source: FieldSource
   fields: Field[]
   flags: string[]
-}> {
+}
+
+/** The 25 sample_gen invoices shipped with the app, listed by public/sample/index.json. */
+export async function loadSampleFiles(baseUrl: string): Promise<File[]> {
+  const names = (await (await fetch(`${baseUrl}sample/index.json`)).json()) as string[]
+  const files: File[] = []
+  for (const name of names) {
+    const blob = await (await fetch(`${baseUrl}sample/${name}`)).blob()
+    files.push(new File([blob], name, { type: 'application/pdf' }))
+  }
+  return files
+}
+
+export async function readDocument(file: File): Promise<ExtractedDocument> {
   const bytes = await file.arrayBuffer() // read once; used for both the fingerprint and the PDF read below
   const digest = await crypto.subtle.digest('SHA-256', bytes)
   const fingerprint = toHex(digest)

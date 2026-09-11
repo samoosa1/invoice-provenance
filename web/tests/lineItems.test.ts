@@ -190,6 +190,30 @@ describe('header-less layouts (pure)', () => {
     expect(fields.some((f) => f.value === 'MVA 25%')).toBe(false)
   })
 
+  it('OCR shape of 13_PH-2025-0215: no readable header, subtotal label glued mid-line; the "Notes:" line is not a row', () => {
+    // Texts and x-ranges are the OCR output seen in the browser on 11.09.2026.
+    const lines = [
+      line(188, [['+', 35, 46], ['Jowsermion', 54, 107], ['[aw', 162, 233], ['|', 240, 248], ['om', 253, 265], ['Tore', 351, 371], ['toro', 510, 545], ['|', 555, 563]]),
+      line(231, [['Amount', 34, 66], ['in', 69, 76], ['words:', 78, 106], ['1,058.93', 109, 141], ['EUR', 145, 162], ['Goods/services', 346, 408], ['total', 410, 427], ['889,86', 508, 535], ['EUR', 539, 557]]),
+      line(249, [['Notes:', 35, 58], ['Thank', 61, 84], ['you', 87, 100], ['for', 103, 113], ['your', 115, 132], ['order.', 134, 155], ['0,00', 518, 535], ['EUR', 539, 557]]),
+      line(281, [['MwSt.', 346, 370], ['19%', 374, 391], ['169,07', 509, 535], ['EUR', 539, 557]]),
+      line(297, [['Total', 346, 366], ['payable', 370, 402], ['1.058,93', 501, 535], ['EUR', 539, 557]]),
+    ]
+    expect(extractLineItems([page(lines)], 'ocr')).toEqual([])
+  })
+
+  it('a totals-block line after the first row ends the block instead of being skipped', () => {
+    const lines = [
+      line(10, [['Consulting', 62, 104], ['100.00', 486, 534]]),
+      line(20, [['Discount', 62, 104], ['5.00', 486, 534]]),
+      line(30, [['Travel', 62, 104], ['20.00', 486, 534]]),
+      line(40, [['TOTAL', 62, 92], ['115.00', 486, 534]]),
+    ]
+    const fields = extractLineItems([page(lines)], 'text')
+    expect(rowsOf(fields)).toBe(1)
+    expect(fields.find((f) => f.name === 'line_item[0].description')!.value).toBe('Travel')
+  })
+
   it('no anchor label, no rows', () => {
     expect(extractLineItems([page([line(10, [['Hello', 0, 30], ['12.00', 100, 130]])])], 'text')).toEqual([])
   })
