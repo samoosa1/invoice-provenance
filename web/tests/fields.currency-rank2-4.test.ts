@@ -44,9 +44,18 @@ describe('F001: currency reaches rank 2/3/4 even when the total field has no win
     expect(currency.provenance?.bbox).not.toBeNull()
   })
 
-  it('(b) same document but one line prints € instead of £ -> uncertain with both GBP and EUR as candidates', () => {
+  it('(b) same document but one line prints € instead of £, and a VAT Reg No hint agrees with GBP -> the hint narrows the £/€ tie to GBP', () => {
     const page1 = mkPage(1, ['Total £1,000.00'])
     const page2 = mkPage(2, ['Total £1,250.00', 'Adjustment €50.00', 'VAT Reg No GB123456789'])
+
+    const currency = currencyOf([page1, page2])
+    expect(currency.state).toBe('read')
+    expect(currency.value).toBe('GBP')
+  })
+
+  it('(b2) same £/€ mix with NO hint to narrow it -> stays uncertain with both GBP and EUR as candidates', () => {
+    const page1 = mkPage(1, ['Total £1,000.00'])
+    const page2 = mkPage(2, ['Total £1,250.00', 'Adjustment €50.00'])
 
     const currency = currencyOf([page1, page2])
     expect(currency.state).toBe('uncertain')
@@ -85,9 +94,22 @@ describe('F001: currency reaches rank 2/3/4 even when the total field has no win
     expect(currency.value).toBe('TRY')
   })
 
-  it('rank 2 (ISO code anywhere) beats rank 3 (symbol) even without a total winner', () => {
+  it('a bare ISO code in prose with no amount next to it is NOT evidence -> the symbol on the money lines wins instead', () => {
+    // Pre-replacement-rule this asserted 'EUR' (a stray code anywhere beat
+    // the symbol on the actual money lines). Under the replacement rule an
+    // ISO code only counts when it sits next to an amount, so "Currency:
+    // EUR" contributes nothing and £ (which IS on the money lines) wins.
     const page1 = mkPage(1, ['Total £1,000.00', 'Currency: EUR'])
     const page2 = mkPage(2, ['Total £1,250.00'])
+
+    const currency = currencyOf([page1, page2])
+    expect(currency.state).toBe('read')
+    expect(currency.value).toBe('GBP')
+  })
+
+  it('an ISO code adjacent to an amount still beats a symbol elsewhere in the document, even without a total winner', () => {
+    const page1 = mkPage(1, ['Total 1,000.00', 'Paid TOTAL EUR 200.00', 'Fee £5.00'])
+    const page2 = mkPage(2, ['Total 1,250.00'])
 
     const currency = currencyOf([page1, page2])
     expect(currency.state).toBe('read')

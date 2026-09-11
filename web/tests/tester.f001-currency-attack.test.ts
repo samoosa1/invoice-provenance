@@ -30,24 +30,17 @@ function currencyOf(pages: PdfPage[]) {
   return extractHeaderFields(pages, 'text').find((f) => f.name === 'currency')!
 }
 
-describe('F001 attack: rank 2 (ISO anywhere) does not collect distinct codes', () => {
-  it('two DIFFERENT ISO codes in the document (no winner) -> rank 2 silently picks the FIRST one as "read" instead of flagging uncertain', () => {
-    // Domain concern: rank 3 (symbols) explicitly collects distinct symbols
-    // so a mix reports 'uncertain'. Rank 2 (ISO codes) has no such collection:
-    // it returns on the FIRST occurrence found in document order. A document
-    // that genuinely contains two different currency codes (e.g. a
-    // conversion note "1 EUR = 1.10 USD") will silently report 'read' with
-    // whichever code appears first, even though the true currency is
-    // ambiguous by the same standard rank 3 applies to symbols.
+describe('F001 attack: rank 2 (ISO anywhere) collects distinct codes', () => {
+  it('two DIFFERENT ISO codes adjacent to amounts in the document (no winner) -> uncertain with both, not a silent pick of the first', () => {
+    // Post-replacement-rule: rank 2 collects every ISO code that sits next
+    // to an amount before deciding. A conversion note ("1 EUR = 1.10 USD")
+    // has both EUR and USD next to amounts, so it disagrees and resolveField
+    // reports 'uncertain', the same standard rank 2 applies to symbols.
     const page1 = mkPage(1, ['Total 1,000.00', 'Rate: 1 EUR = 1.10 USD'])
     const page2 = mkPage(2, ['Total 1,250.00'])
     const currency = currencyOf([page1, page2])
-    // This assertion documents the CURRENT (asymmetric) behavior; it is not
-    // a hard failure against the letter of the spec (which said "box of the
-    // first occurrence" for rank 2, unlike rank 3's explicit distinct-symbol
-    // handling). Flagged as a design asymmetry, not a blocking bug.
-    expect(currency.state).toBe('read')
-    expect(currency.value).toBe('EUR')
+    expect(currency.state).toBe('uncertain')
+    expect(currency.candidates).toEqual(expect.arrayContaining(['EUR', 'USD']))
   })
 })
 

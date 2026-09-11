@@ -186,6 +186,11 @@ describe('R013 currency acceptance', () => {
     ['03_PH-2025-0214.pdf', 'EUR'],
     ['04_CF-2025-511.pdf', 'USD'],
     ['19_319.pdf', 'EUR'],
+    // ABN + GST in the letterhead narrow the $ on the winning total line to
+    // AUD (F001 rank 1 hint narrowing), so these two now read instead of
+    // staying uncertain.
+    ['07_AF-00496.pdf', 'AUD'],
+    ['10_AF-00500.pdf', 'AUD'],
   ]
   for (const [file, expected] of readCases) {
     it(`${file} -> read ${expected}`, async () => {
@@ -196,7 +201,7 @@ describe('R013 currency acceptance', () => {
       expect(f.value).toBe(expected)
     })
   }
-  const uncertainCases = ['07_AF-00496.pdf', '10_AF-00500.pdf', '11_805.pdf', '20_811.pdf']
+  const uncertainCases = ['11_805.pdf', '20_811.pdf']
   for (const file of uncertainCases) {
     it(`${file} -> uncertain USD/AUD`, async () => {
       const pages = await readPdf(pdfFile(file), file)

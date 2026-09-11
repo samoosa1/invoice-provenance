@@ -605,12 +605,17 @@ function totalCandidatesWithLines(pages: PdfPage[]): { candidates: Candidate[]; 
 
 const SYMBOL_CURRENCY: Record<string, string> = { '£': 'GBP', '€': 'EUR', '₺': 'TRY' }
 
-// Document-level tax-label / tax-id hints, tried only when nothing else on
-// or off the winning total line carries an ISO code or a currency symbol.
+// Document-level tax-id hints. Used as rank 2's fallback source when nothing
+// else in the document carries an ISO code or a symbol, and to narrow a `$`
+// tie (ranks 1 and 2) when the iso/symbol evidence disagrees. Because a hint
+// can DECIDE a currency, every token here must be specific to one country:
+// ABN is Australian and EIN is American, but GST is printed in New Zealand,
+// Canada, Singapore and India too, so it is deliberately absent; a `$` invoice
+// whose only corroboration is GST stays 'uncertain {USD, AUD}' rather than
+// becoming a confident AUD.
 const CURRENCY_HINTS: Array<{ re: RegExp; currency: string }> = [
   { re: /MwSt|USt/d, currency: 'EUR' },
   { re: /VAT\s*Reg\s*No/d, currency: 'GBP' },
-  { re: /\bGST\b/d, currency: 'AUD' },
   { re: /\bABN\b/d, currency: 'AUD' },
   { re: /\bEIN\b/d, currency: 'USD' },
 ]
@@ -632,16 +637,25 @@ function currencyCandidates(pages: PdfPage[], winner: Candidate | null, winnerLi
     }
 
     // rank 1: a currency symbol on the total's own line. `$` is ambiguous
-    // between USD and AUD in this sample set, so it emits both at the SAME
-    // rank and is never tie-broken by a later rank.
+    // between USD and AUD in this sample set; before emitting both at the
+    // SAME rank, the document-wide EIN/ABN hints get a chance to narrow
+    // it to one, exactly like rank 2 narrows its own iso/sym ties. Without
+    // this, a hint elsewhere in the document is unreachable whenever `$`
+    // happens to sit on the winning total line itself.
     const symM = CURRENCY_SYMBOL_RE.exec(winnerLine.text)
     if (symM?.indices) {
       const [s, e] = symM.indices[1]!
       const bbox = boxFor(winnerLine, s, e)
       const sym = symM[1]
       if (sym === '$') {
-        out.push({ value: 'USD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
-        out.push({ value: 'AUD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+        const hint = collectHints(pages)
+        const narrowed = ['USD', 'AUD'].filter((c) => hint.has(c))
+        if (narrowed.length === 1) {
+          out.push({ value: narrowed[0], raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+        } else {
+          out.push({ value: 'USD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+          out.push({ value: 'AUD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+        }
       } else {
         out.push({ value: SYMBOL_CURRENCY[sym], raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
       }
@@ -649,61 +663,98 @@ function currencyCandidates(pages: PdfPage[], winner: Candidate | null, winnerLi
     }
   }
 
-  // rank 2: an ISO code anywhere in the document (no total winner required),
-  // box of the first occurrence.
-  for (const page of pages) {
-    for (const line of page.lines) {
-      const m = ISO_CODE_RE.exec(line.text)
-      if (m?.indices) {
-        const [s, e] = m.indices[1]!
-        out.push({ value: m[1], raw: m[1], page: page.page, bbox: boxFor(line, s, e), confidence: null, patternRank: 2 })
-        return out
-      }
-    }
-  }
+  // rank 2: document-wide evidence, collected then narrowed (see
+  // decideDocumentCurrency for the rule).
+  out.push(...decideDocumentCurrency(pages))
+  return out
+}
 
-  // rank 3: currency symbols anywhere in the document. Every DISTINCT symbol
-  // becomes its own candidate (box of its first occurrence), so a document
-  // mixing symbols (e.g. £ and €) disagrees and resolveField reports
-  // 'uncertain'; `$` still expands to USD and AUD at this rank.
-  const firstOccurrence = new Map<string, { page: number; bbox: ReturnType<typeof boxFor> }>()
-  for (const page of pages) {
-    for (const line of page.lines) {
-      for (const m of line.text.matchAll(/([£€₺$])/gd)) {
-        const sym = m[1]
-        if (firstOccurrence.has(sym)) continue
-        const indices = (m as RegExpMatchArray & { indices: Array<[number, number]> }).indices[1]!
-        firstOccurrence.set(sym, { page: page.page, bbox: boxFor(line, indices[0], indices[1]) })
-      }
-    }
-  }
-  if (firstOccurrence.size > 0) {
-    for (const [sym, { page, bbox }] of firstOccurrence) {
-      if (sym === '$') {
-        out.push({ value: 'USD', raw: sym, page, bbox, confidence: null, patternRank: 3 })
-        out.push({ value: 'AUD', raw: sym, page, bbox, confidence: null, patternRank: 3 })
-      } else {
-        out.push({ value: SYMBOL_CURRENCY[sym], raw: sym, page, bbox, confidence: null, patternRank: 3 })
-      }
-    }
-    return out
-  }
+/**
+ * ISO code sitting right next to an amount, either side: 'TRY 1,234.00' or
+ * '1,234.00 TRY'. A bare code loose in prose ('Please TRY to pay') matches
+ * neither shape and is not evidence.
+ */
+const ISO_NEAR_AMOUNT_RE = /\b(USD|EUR|GBP|AUD|TRY|NOK|SEK|CHF|CAD)\s*[\d.,]+\d\b|\d[\d.,]*\s*\b(USD|EUR|GBP|AUD|TRY|NOK|SEK|CHF|CAD)\b/gd
 
-  // rank 4: a document-level tax-label or tax-id hint
+// Every currency a symbol could mean; `$` stays ambiguous between USD/AUD
+// until a hint narrows it.
+const SYMBOL_CURRENCIES: Record<string, string[]> = { '£': ['GBP'], '€': ['EUR'], '₺': ['TRY'], $: ['USD', 'AUD'] }
+
+type DocEvidence = { currency: string; page: number; bbox: BBox | null }
+
+/**
+ * Document-wide CURRENCY_HINTS scan, shared by rank 1 (to narrow an
+ * ambiguous `$` found on the winning total line itself) and rank 2's
+ * decideDocumentCurrency (to narrow its own iso/sym ties).
+ */
+function collectHints(pages: PdfPage[]): Map<string, DocEvidence> {
+  const hint = new Map<string, DocEvidence>()
   for (const page of pages) {
     for (const line of page.lines) {
-      for (const hint of CURRENCY_HINTS) {
-        const m = hint.re.exec(line.text)
+      for (const h of CURRENCY_HINTS) {
+        if (hint.has(h.currency)) continue
+        const m = h.re.exec(line.text)
         if (m?.indices) {
           const [s, e] = m.indices[0]!
-          out.push({ value: hint.currency, raw: m[0], page: page.page, bbox: boxFor(line, s, e), confidence: null, patternRank: 4 })
-          return out
+          hint.set(h.currency, { currency: h.currency, page: page.page, bbox: boxFor(line, s, e) })
         }
       }
     }
   }
+  return hint
+}
 
-  return out
+/**
+ * Rank 2 in full: collects three document-wide evidence sets (ISO code next
+ * to an amount, currency symbol, tax-label/tax-id hint) before deciding,
+ * instead of returning on the first thing found. Candidates start as
+ * whichever set is non-empty in iso -> sym -> hint order; if that set still
+ * disagrees (more than one currency) and a hint exists, it narrows the set
+ * to its intersection with the hint (e.g. `$` = {USD, AUD} narrowed to
+ * {AUD} by an ABN hint). One Candidate per surviving currency, all at
+ * patternRank 2, so resolveField reads a lone survivor and reports
+ * 'uncertain' with the rest. Pure aside from `boxFor`, so it is testable in
+ * isolation from PDF plumbing.
+ */
+function decideDocumentCurrency(pages: PdfPage[]): Candidate[] {
+  const iso = new Map<string, DocEvidence>()
+  const sym = new Map<string, DocEvidence>()
+
+  for (const page of pages) {
+    for (const line of page.lines) {
+      for (const m of line.text.matchAll(ISO_NEAR_AMOUNT_RE)) {
+        const code = m[1] ?? m[2]
+        if (!code || iso.has(code)) continue
+        const groupIndex = m[1] ? 1 : 2
+        const indices = (m as RegExpMatchArray & { indices: Array<[number, number]> }).indices[groupIndex]!
+        iso.set(code, { currency: code, page: page.page, bbox: boxFor(line, indices[0], indices[1]) })
+      }
+      for (const m of line.text.matchAll(/([£€₺$])/gd)) {
+        const symbol = m[1]!
+        const indices = (m as RegExpMatchArray & { indices: Array<[number, number]> }).indices[1]!
+        for (const currency of SYMBOL_CURRENCIES[symbol]) {
+          if (sym.has(currency)) continue
+          sym.set(currency, { currency, page: page.page, bbox: boxFor(line, indices[0], indices[1]) })
+        }
+      }
+    }
+  }
+  const hint = collectHints(pages)
+
+  let candidates = iso.size > 0 ? iso : sym.size > 0 ? sym : hint
+  if (candidates.size > 1 && hint.size > 0) {
+    const narrowed = new Map([...candidates].filter(([currency]) => hint.has(currency)))
+    if (narrowed.size > 0) candidates = narrowed
+  }
+
+  return [...candidates.values()].map((e) => ({
+    value: e.currency,
+    raw: e.currency,
+    page: e.page,
+    bbox: e.bbox,
+    confidence: null,
+    patternRank: 2,
+  }))
 }
 
 // --- top-level assembly ----------------------------------------------------

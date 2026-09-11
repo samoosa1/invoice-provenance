@@ -228,6 +228,11 @@ describe('currency (R013)', () => {
     ['03_PH-2025-0214.pdf', 'EUR'],
     ['04_CF-2025-511.pdf', 'USD'],
     ['19_319.pdf', 'EUR'],
+    // ABN + GST in the letterhead narrow the $ on the winning total line to
+    // AUD (F001 rank 1 hint narrowing), so these two now read instead of
+    // staying uncertain.
+    ['07_AF-00496.pdf', 'AUD'],
+    ['10_AF-00500.pdf', 'AUD'],
   ]
   for (const [file, expected] of readCases) {
     it(`${file} -> read ${expected}`, async () => {
@@ -237,7 +242,7 @@ describe('currency (R013)', () => {
     })
   }
 
-  const uncertainCases = ['07_AF-00496.pdf', '10_AF-00500.pdf', '11_805.pdf', '20_811.pdf']
+  const uncertainCases = ['11_805.pdf', '20_811.pdf']
   for (const file of uncertainCases) {
     it(`${file} -> uncertain USD/AUD`, async () => {
       const f = byName(await fieldsFor(file), 'currency')
@@ -372,7 +377,7 @@ describe('provenance boxes (R017)', () => {
 describe('coverage (R020)', () => {
   const expected: Record<string, { total: number; read: number; corrected: number; uncertain: number; not_found: number }> = {
     '00_BF-00885.pdf': { total: 8, read: 8, corrected: 0, uncertain: 0, not_found: 0 },
-    '07_AF-00496.pdf': { total: 8, read: 7, corrected: 0, uncertain: 1, not_found: 0 },
+    '07_AF-00496.pdf': { total: 8, read: 8, corrected: 0, uncertain: 0, not_found: 0 },
     '04_CF-2025-511.pdf': { total: 8, read: 5, corrected: 0, uncertain: 0, not_found: 3 },
     '11_805.pdf': { total: 8, read: 6, corrected: 0, uncertain: 1, not_found: 1 },
   }
