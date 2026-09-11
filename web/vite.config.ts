@@ -14,6 +14,11 @@ export default defineConfig({
   test: {
     environment: 'node', // domain layer is pure TS, no DOM needed
     include: ['tests/**/*.test.ts'],
+    // Vitest's 5000ms default is tight for tests that parse real PDFs with
+    // pdf.js: fine in isolation, but under parallel workers on a loaded
+    // machine several of them can queue behind each other and blow the
+    // default. Room to breathe under contention, not a longer-running suite.
+    testTimeout: 30000,
     alias: {
       // TESTS ONLY. pdf.js's default build reaches for DOMMatrix at import
       // time, which Node does not have; the legacy build is the one pdf.js

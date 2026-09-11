@@ -1,3 +1,5 @@
 node_modules
 dist
 *.local
+# accuracy table written by tests/accuracy.test.ts; the numbers go in the README by hand
+tests/out/

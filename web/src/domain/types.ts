@@ -8,11 +8,23 @@
 
 export type BBox = { x: number; y: number; width: number; height: number }
 
-/** One text fragment as the PDF positions it. */
-export type PositionedItem = { str: string; bbox: BBox }
+/**
+ * One word, boxed from the glyph advances the PDF itself positions it with
+ * (lib/glyphs.ts), or from an OCR word box (domain/ocrPages.ts). Only OCR
+ * words carry a confidence (tesseract's 0-100); a text layer is exact.
+ */
+export type PositionedItem = { str: string; bbox: BBox; confidence?: number }
+
+/**
+ * One contributing item's character range within a Line's FINAL (trimmed)
+ * text, half-open, in text order. `boxFor` subdivides a span by character
+ * index so a value that sits inside a multi-word text run can still get its
+ * own box instead of the whole run's.
+ */
+export type Span = { start: number; end: number; bbox: BBox }
 
 /** Fragments sharing a baseline, joined left to right. */
-export type Line = { text: string; bbox: BBox; items: PositionedItem[] }
+export type Line = { text: string; bbox: BBox; items: PositionedItem[]; spans: Span[] }
 
 export type PdfPage = {
   page: number // 1-based
