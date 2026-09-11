@@ -71,6 +71,32 @@ class FieldsIn(Strict):
     fields: list[FieldIn]
 
 
+class CorrectionIn(Strict):
+    """A human's ruling on one field. `accept` takes a candidate the extractor
+    offered, `correct` a typed value, `unreadable` nothing: the person could not
+    read it either, which is recorded rather than guessed."""
+
+    action: Literal["accept", "correct", "unreadable"]
+    value: Value | None = None
+
+
+class FieldOut(Strict):
+    id: UUID
+    name: str
+    value: str | None
+    state: Literal["read", "uncertain", "not_found"]
+    source: Literal["text", "ocr", "human"]
+    page: int | None
+    bbox: BBox | None
+    confidence: float | None
+    candidates: list[str] | None
+
+
+class CorrectionOut(Strict):
+    field: FieldOut
+    run_coverage: CoverageIn
+
+
 class RunOut(Strict):
     id: UUID
     n_documents: int

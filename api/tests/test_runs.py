@@ -78,7 +78,8 @@ def test_happy_path_run_document_fields_and_readback(client, session) -> None:
     doc_id = make_doc(client, run_id)
     r = client.post(f"/api/runs/{run_id}/fields", json={"document_id": doc_id, "coverage": COVERAGE_8, "fields": eight_fields()}, headers=AUTH)
     assert r.status_code == 201, r.text
-    assert r.json() == {"written": 8}
+    assert r.json()["written"] == 8
+    assert len(r.json()["ids"]) == 8 and len(set(r.json()["ids"])) == 8
 
     r = client.get(f"/api/runs/{run_id}", headers=AUTH)
     assert r.status_code == 200

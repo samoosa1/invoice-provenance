@@ -56,7 +56,7 @@ def upsert_document(
 
 
 @router.post("/{run_id}/fields", status_code=status.HTTP_201_CREATED)
-def add_fields(run_id: UUID, body: FieldsIn, ws: Workspace = Depends(require_workspace), session: Session = Depends(get_session)) -> dict[str, int]:
+def add_fields(run_id: UUID, body: FieldsIn, ws: Workspace = Depends(require_workspace), session: Session = Depends(get_session)) -> dict:
     run = _run(session, ws, run_id)
     doc = session.get(Document, body.document_id)
     if doc is None or doc.workspace_id != ws.id:
@@ -72,7 +72,7 @@ def add_fields(run_id: UUID, body: FieldsIn, ws: Workspace = Depends(require_wor
             detail=f"coverage line {body.coverage.model_dump()} does not match the fields sent {counted}",
         )
 
-    session.add_all(
+    rows = [
         Field(
             workspace_id=ws.id,
             run_id=run.id,
@@ -87,9 +87,12 @@ def add_fields(run_id: UUID, body: FieldsIn, ws: Workspace = Depends(require_wor
             candidates=f.candidates,
         )
         for f in body.fields
-    )
+    ]
+    session.add_all(rows)
     session.commit()
-    return {"written": len(body.fields)}
+    # Ids in the order sent, so the browser can address a field for a
+    # correction without a second round trip.
+    return {"written": len(rows), "ids": [str(r.id) for r in rows]}
 
 
 @router.get("/{run_id}")
