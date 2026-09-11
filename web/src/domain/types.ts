@@ -8,8 +8,12 @@
 
 export type BBox = { x: number; y: number; width: number; height: number }
 
-/** One word, boxed from the glyph advances the PDF itself positions it with (lib/glyphs.ts). */
-export type PositionedItem = { str: string; bbox: BBox }
+/**
+ * One word, boxed from the glyph advances the PDF itself positions it with
+ * (lib/glyphs.ts), or from an OCR word box (domain/ocrPages.ts). Only OCR
+ * words carry a confidence (tesseract's 0-100); a text layer is exact.
+ */
+export type PositionedItem = { str: string; bbox: BBox; confidence?: number }
 
 /**
  * One contributing item's character range within a Line's FINAL (trimmed)

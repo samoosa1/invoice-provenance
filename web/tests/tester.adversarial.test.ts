@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { readPdf, assembleLines } from '../src/lib/pdf'
 import { boxFor } from '../src/lib/pdf'
 import { boxFor as boxForDomain } from '../src/domain/spans'
@@ -357,12 +357,19 @@ describe('R018/R019/R020 pipeline', () => {
     expect(src).not.toMatch(/Promise\.all\(/)
   })
 
+  // Under Vitest's node environment there is no `document`, so the OCR
+  // engine cannot start and readDocument takes its engine-failure path:
+  // eight `uncertain` fields with no value and no box, never `not_found`.
+  // The real OCR path (Task 1c) is verified in the browser against the
+  // five scanned samples, not here.
   const scanFiles = ['06_NW-213.pdf', '13_PH-2025-0215.pdf', '15_808.pdf', '18_809.pdf', '23_AF-00503.pdf']
   for (const file of scanFiles) {
-    it(`${file} -> ocr path, all uncertain`, async () => {
+    it(`${file} -> ocr path; with no engine available, all uncertain`, async () => {
       const buf = pdfBuffer(file)
       const f = new File([buf], file)
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const doc = await readDocument(f)
+      warn.mockRestore()
       expect(doc.source).toBe('ocr')
       expect(doc.pageCount).toBe(1)
       expect(doc.fields.length).toBe(8)
@@ -376,10 +383,9 @@ describe('R018/R019/R020 pipeline', () => {
     })
   }
 
-  it('ocr.ts not modified', () => {
-    // sanity: ocrPdfPages not referenced from pipeline for text path misuse
+  it('a document with no text layer is sent through ocrPdfPages (Task 1c), not left unread', () => {
     const src = readFileSync(new URL('../src/ui/pipeline.ts', import.meta.url), 'utf8')
-    expect(src).not.toMatch(/ocrPdfPages/)
+    expect(src).toMatch(/ocrPdfPages\(/)
   })
 })
 

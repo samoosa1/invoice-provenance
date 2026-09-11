@@ -770,29 +770,60 @@ const FIELD_NAMES = ['invoice_number', 'vendor', 'invoice_date', 'due_date', 'cu
  * in that line and put every provenance box in the wrong place while the
  * value still looked right.
  */
+/**
+ * A candidate's confidence is the MINIMUM over the OCR words its box covers:
+ * a value is only as trustworthy as its worst character. Text-layer words
+ * carry no confidence, so the result stays null there and resolveField's
+ * floor never engages.
+ *
+ * "Covers" means the word's centre lies inside the candidate's box, not any
+ * overlap: on the scanned 23_AF-00503 tesseract reads a table rule as the
+ * word "ee" at confidence 4, 252pt wide and 7pt tall, and its edge grazes
+ * both the tax line and the total line. Any-overlap sent two correct values
+ * to review on the strength of a line that is not text.
+ */
+function coveringConfidence(pages: PdfPage[], c: Candidate): number | null {
+  if (!c.bbox) return null
+  const page = pages.find((p) => p.page === c.page)
+  if (!page) return null
+  const b = c.bbox
+  let min: number | null = null
+  for (const item of page.items) {
+    if (item.confidence === undefined) continue
+    const cx = item.bbox.x + item.bbox.width / 2
+    const cy = item.bbox.y + item.bbox.height / 2
+    const inside = cx >= b.x && cx <= b.x + b.width && cy >= b.y && cy <= b.y + b.height
+    if (inside && (min === null || item.confidence < min)) min = item.confidence
+  }
+  return min
+}
+
 export function extractHeaderFields(pages: PdfPage[], source: FieldSource): Field[] {
+  const resolve = (name: string, candidates: Candidate[]) =>
+    resolveField(name, candidates.map((c) => ({ ...c, confidence: c.confidence ?? coveringConfidence(pages, c) })), source)
+
   const docText = pages.flatMap((p) => p.lines.map((l) => l.text)).join('\n')
   const normalisedDocText = normalise(docText)
   const isUS = US_HINTS.test(normalisedDocText)
   const isNonUS = NON_US_HINTS.test(normalisedDocText)
   const orientation: Orientation = isUS && !isNonUS ? 'us' : isNonUS && !isUS ? 'non_us' : 'none'
 
-  const invoiceNumber = resolveField('invoice_number', collectPerPage(pages, invoiceNumberCandidates), source)
-  const vendor = resolveField('vendor', collectPerPage(pages, vendorCandidatesForPage), source)
-  const invoiceDate = resolveField('invoice_date', collectPerPage(pages, (p) => invoiceDateCandidates(p, orientation)), source)
+  const invoiceNumber = resolve('invoice_number', collectPerPage(pages, invoiceNumberCandidates))
+  const vendor = resolve('vendor', collectPerPage(pages, vendorCandidatesForPage))
+  const invoiceDate = resolve('invoice_date', collectPerPage(pages, (p) => invoiceDateCandidates(p, orientation)))
 
-  const dueDateRaw = resolveField('due_date', collectPerPage(pages, (p) => dueDateCandidates(p, orientation)), source)
+  const dueDateRaw = resolve('due_date', collectPerPage(pages, (p) => dueDateCandidates(p, orientation)))
   const dueDate = suppressOverlap(dueDateRaw, invoiceDate)
 
   const { candidates: totalCandidates, lines: totalLines } = totalCandidatesWithLines(pages)
-  const total = resolveField('total', totalCandidates, source)
+  const total = resolve('total', totalCandidates)
   const winner = winningCandidate(totalCandidates)
   const winnerIdx = winner ? totalCandidates.indexOf(winner) : -1
   const winnerLine = winnerIdx >= 0 ? totalLines[winnerIdx] : null
 
-  const currency = resolveField('currency', currencyCandidates(pages, winner, winnerLine), source)
-  const subtotal = resolveField('subtotal', collectPerPage(pages, (p) => moneyCandidatesForPage(p, SUBTOTAL_PATTERN_DEFS)), source)
-  const tax = resolveField('tax', collectPerPage(pages, (p) => moneyCandidatesForPage(p, TAX_PATTERN_DEFS)), source)
+  const currency = resolve('currency', currencyCandidates(pages, winner, winnerLine))
+  const subtotal = resolve('subtotal', collectPerPage(pages, (p) => moneyCandidatesForPage(p, SUBTOTAL_PATTERN_DEFS)))
+  const tax = resolve('tax', collectPerPage(pages, (p) => moneyCandidatesForPage(p, TAX_PATTERN_DEFS)))
 
   const byName: Record<(typeof FIELD_NAMES)[number], Field> = {
     invoice_number: invoiceNumber,

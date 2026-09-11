@@ -8,15 +8,16 @@
 
 import { extractHeaderFields } from '../domain/fields'
 import type { Field, FieldSource } from '../domain/types'
+import { ocrPdfPages } from '../lib/ocr'
 import { readPdf } from '../lib/pdf'
 
 const FIELD_NAMES = ['invoice_number', 'vendor', 'invoice_date', 'due_date', 'currency', 'subtotal', 'tax', 'total'] as const
 
-/** A scan with no text layer has never been read (OCR is a later task), so
- * it cannot claim 'not_found' for its eight fields: that state means "the
- * page does not print this", which is not known yet. It reports 'uncertain'
- * with no value and no candidates, so the document routes to human review
- * instead of asserting the page is blank. */
+/** A scan the OCR engine could not process has never been read, so it cannot
+ * claim 'not_found' for its eight fields: that state means "the page does not
+ * print this", which is not known. It reports 'uncertain' with no value and
+ * no candidates, so the document routes to human review instead of asserting
+ * the page is blank. */
 function unreadFields(source: FieldSource): Field[] {
   return FIELD_NAMES.map((name) => ({
     name,
@@ -48,12 +49,20 @@ export async function readDocument(file: File): Promise<{
 
   const pages = await readPdf(new Blob([bytes]), file.name)
   const hasTextLayer = pages.some((p) => p.items.length > 0)
+  if (hasTextLayer) {
+    return { fileName: file.name, fingerprint, pageCount: pages.length, source: 'text', fields: extractHeaderFields(pages, 'text') }
+  }
 
-  // OCR positioning (spec 1c) is a later task: without it a scan has no
-  // per-value boxes to offer, so it routes straight to human review instead
-  // of guessing at eight fields with fabricated provenance.
-  const source: FieldSource = hasTextLayer ? 'text' : 'ocr'
-  const fields = hasTextLayer ? extractHeaderFields(pages, source) : unreadFields(source)
-
+  // No text layer: OCR every page into the same PdfPage shape (word boxes in
+  // PDF points, per-word confidence) and extract from that. Only a failure
+  // to run the engine at all leaves the document unread.
+  const source: FieldSource = 'ocr'
+  let fields: Field[]
+  try {
+    fields = extractHeaderFields(await ocrPdfPages(new Blob([bytes])), source)
+  } catch (cause) {
+    console.warn(`OCR failed for ${file.name}; routing to review`, cause)
+    fields = unreadFields(source)
+  }
   return { fileName: file.name, fingerprint, pageCount: pages.length, source, fields }
 }
