@@ -346,7 +346,9 @@ describe('R018/R019/R020 pipeline', () => {
     expect(doc.fileName).toBe('00_BF-00885.pdf')
     expect(doc.pageCount).toBe(1)
     expect(doc.source).toBe('text')
-    expect(doc.fields.length).toBe(8)
+    expect(doc.fields.length).toBe(8 + 4 * 4) // eight header fields + four cells for each of the four printed rows (T7)
+    expect(doc.fields.slice(0, 8).map((f) => f.name)).toEqual(['invoice_number', 'vendor', 'invoice_date', 'due_date', 'currency', 'subtotal', 'tax', 'total'])
+    expect(doc.flags).toEqual(['line_sum_mismatch']) // planted in the ground truth
     expect(doc.fingerprint).toMatch(/^[0-9a-f]{64}$/)
     const expectedHash = createHash('sha256').update(buf).digest('hex')
     expect(doc.fingerprint).toBe(expectedHash)

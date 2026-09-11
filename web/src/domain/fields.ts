@@ -837,3 +837,6 @@ export function extractHeaderFields(pages: PdfPage[], source: FieldSource): Fiel
   }
   return FIELD_NAMES.map((n) => byName[n])
 }
+
+// Re-exported for domain/lineItems.ts; the copied block above stays byte-identical.
+export { MONEY }

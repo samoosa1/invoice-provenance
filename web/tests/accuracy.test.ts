@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest'
 
 import { formatAccuracyTable, scoreRun, valuesMatch, type DocumentResult, type TruthFile } from '../src/domain/accuracy'
 import { extractHeaderFields } from '../src/domain/fields'
+import { extractLineItems } from '../src/domain/lineItems'
 import type { Field } from '../src/domain/types'
 import { readPdf } from '../src/lib/pdf'
 
@@ -44,6 +45,7 @@ const T: TruthFile = {
   subtotal: 2072.63,
   tax: 414.53,
   total: 2487.16,
+  line_items: [],
 }
 
 const row = (rows: ReturnType<typeof scoreRun>, name: string) => rows.find((r) => r.field === name)!
@@ -126,7 +128,7 @@ describe('the run: 20 text-layer samples against ground truth', () => {
     const extracted: DocumentResult[] = []
     for (const t of textLayer) {
       const pages = await readPdf(new Blob([readFileSync(new URL(`../public/sample/${t.file}`, import.meta.url))]), t.file)
-      extracted.push({ file: t.file, fields: extractHeaderFields(pages, 'text') })
+      extracted.push({ file: t.file, fields: [...extractHeaderFields(pages, 'text'), ...extractLineItems(pages, 'text')] })
     }
     const rows = scoreRun(extracted, textLayer)
     const table = formatAccuracyTable(rows)

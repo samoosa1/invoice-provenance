@@ -7,7 +7,8 @@
  */
 
 import { extractHeaderFields } from '../domain/fields'
-import type { Field, FieldSource } from '../domain/types'
+import { extractLineItems, lineSumFlags } from '../domain/lineItems'
+import type { Field, FieldSource, PdfPage } from '../domain/types'
 import { ocrPdfPages } from '../lib/ocr'
 import { readPdf } from '../lib/pdf'
 
@@ -30,6 +31,13 @@ function unreadFields(source: FieldSource): Field[] {
   }))
 }
 
+/** The eight header fields, then every line-item cell, and the document
+ * flags the totals cross-check raises over them. */
+function extractAll(pages: PdfPage[], source: FieldSource): { fields: Field[]; flags: string[] } {
+  const fields = [...extractHeaderFields(pages, source), ...extractLineItems(pages, source)]
+  return { fields, flags: lineSumFlags(fields) }
+}
+
 function toHex(digest: ArrayBuffer): string {
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -42,6 +50,7 @@ export async function readDocument(file: File): Promise<{
   pageCount: number
   source: FieldSource
   fields: Field[]
+  flags: string[]
 }> {
   const bytes = await file.arrayBuffer() // read once; used for both the fingerprint and the PDF read below
   const digest = await crypto.subtle.digest('SHA-256', bytes)
@@ -50,7 +59,7 @@ export async function readDocument(file: File): Promise<{
   const pages = await readPdf(new Blob([bytes]), file.name)
   const hasTextLayer = pages.some((p) => p.items.length > 0)
   if (hasTextLayer) {
-    return { fileName: file.name, fingerprint, pageCount: pages.length, source: 'text', fields: extractHeaderFields(pages, 'text') }
+    return { fileName: file.name, fingerprint, pageCount: pages.length, source: 'text', ...extractAll(pages, 'text') }
   }
 
   // No text layer: OCR every page into the same PdfPage shape (word boxes in
@@ -58,11 +67,12 @@ export async function readDocument(file: File): Promise<{
   // to run the engine at all leaves the document unread.
   const source: FieldSource = 'ocr'
   let fields: Field[]
+  let flags: string[] = []
   try {
-    fields = extractHeaderFields(await ocrPdfPages(new Blob([bytes])), source)
+    ;({ fields, flags } = extractAll(await ocrPdfPages(new Blob([bytes])), source))
   } catch (cause) {
     console.warn(`OCR failed for ${file.name}; routing to review`, cause)
     fields = unreadFields(source)
   }
-  return { fileName: file.name, fingerprint, pageCount: pages.length, source, fields }
+  return { fileName: file.name, fingerprint, pageCount: pages.length, source, fields, flags }
 }

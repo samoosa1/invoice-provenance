@@ -11,12 +11,16 @@
  * - every extracted document must have a truth record and vice versa, or
  *   the run throws rather than scoring a subset.
  *
+ * Line items join the table per cell (description, qty, unit_price,
+ * amount), truth row i against extracted row i.
+ *
  * Only `read` fields count as reported. `uncertain` and `not_found` are
  * both "did not put a value in the output", which is what the review queue
  * exists for, so both land in routedToReview when the page prints a value.
  */
 
 import { parseAmount } from './fields'
+import { LINE_ITEM_FIELDS, parseLineItemName, type LineItemField } from './lineItems'
 import { sequenceRatio } from './similarity'
 import type { Field } from './types'
 
@@ -34,7 +38,9 @@ export type FieldAccuracy = {
 /** One document's extraction, keyed by the file the truth record names. */
 export type DocumentResult = { file: string; fields: Field[] }
 
-/** The header fields of a ground-truth JSON; line items are Task 7's. */
+export type TruthLineItem = { description: string; qty: number; unit_price: number | null; amount: number }
+
+/** A ground-truth JSON: the header fields plus the printed line items. */
 export type TruthFile = {
   file: string
   vendor: string
@@ -45,10 +51,12 @@ export type TruthFile = {
   subtotal: number | null
   tax: number | null
   total: number
+  line_items: TruthLineItem[]
 }
 
 export const HEADER_FIELDS = ['invoice_number', 'vendor', 'invoice_date', 'due_date', 'currency', 'subtotal', 'tax', 'total'] as const
 type HeaderField = (typeof HEADER_FIELDS)[number]
+export type ScoredField = HeaderField | LineItemField
 
 /**
  * Vendor is judged by SequenceMatcher ratio at this threshold, quoted in the
@@ -61,11 +69,17 @@ type HeaderField = (typeof HEADER_FIELDS)[number]
 export const VENDOR_MATCH_RATIO = 0.95
 
 /** Whether a `read` value equals the truth, by the field's own comparison rule. */
-export function valuesMatch(field: HeaderField, value: string, truth: string | number): boolean {
+export function valuesMatch(field: ScoredField, value: string, truth: string | number): boolean {
   switch (field) {
+    case 'qty':
+      return Number(value.replace(',', '.')) === Number(truth)
+    case 'description':
+      return value.trim() === String(truth).trim()
     case 'subtotal':
     case 'tax':
-    case 'total': {
+    case 'total':
+    case 'unit_price':
+    case 'amount': {
       const got = parseAmount(value)
       return got !== null && Math.round(got * 100) === Math.round(Number(truth) * 100)
     }
@@ -91,25 +105,62 @@ export function scoreRun(extracted: DocumentResult[], truth: TruthFile[]): Field
   for (const t of truth) if (!extractedFiles.has(t.file)) throw new Error(`No extraction for ${t.file}`)
   if (extractedFiles.size !== extracted.length) throw new Error('A document appears twice in the run')
 
-  return HEADER_FIELDS.map((field) => {
-    const row: FieldAccuracy = { field, truthPresent: 0, reported: 0, correct: 0, falsePositive: 0, routedToReview: 0, precision: null, recall: null }
+  const header = HEADER_FIELDS.map((field) => {
+    const row = emptyRow(field)
     for (const d of extracted) {
-      const expected = truthByFile.get(d.file)![field]
       const f = d.fields.find((x) => x.name === field)
       if (!f) throw new Error(`${d.file} has no ${field} field`)
-      if (expected !== null) row.truthPresent++
-      if (f.state === 'read') {
-        row.reported++
-        if (expected === null) row.falsePositive++
-        else if (f.value !== null && valuesMatch(field, f.value, expected)) row.correct++
-      } else if (expected !== null) {
-        row.routedToReview++
+      tally(row, field, f, truthByFile.get(d.file)![field])
+    }
+    return finish(row)
+  })
+
+  // Line items are scored per cell, rows paired by index: truth row i against
+  // extracted row i. A truth row the extractor never produced counts as
+  // routed to review (nothing was put in the output); an extracted row past
+  // the end of the truth is a false positive per cell (a value claimed
+  // where the page prints no row).
+  const lineItems = LINE_ITEM_FIELDS.map((column) => {
+    const row = emptyRow(column)
+    for (const d of extracted) {
+      const truthRows = truthByFile.get(d.file)!.line_items
+      const byIndex = new Map<number, Field>()
+      for (const f of d.fields) {
+        const p = parseLineItemName(f.name)
+        if (p && p.column === column) byIndex.set(p.index, f)
+      }
+      const n = Math.max(truthRows.length, byIndex.size === 0 ? 0 : Math.max(...byIndex.keys()) + 1)
+      for (let i = 0; i < n; i++) {
+        const expected = truthRows[i] ? truthRows[i][column] : null
+        tally(row, column, byIndex.get(i), expected)
       }
     }
-    row.precision = row.reported === 0 ? null : row.correct / row.reported
-    row.recall = row.truthPresent === 0 ? null : row.correct / row.truthPresent
-    return row
+    return finish(row)
   })
+
+  return [...header, ...lineItems]
+}
+
+function emptyRow(field: string): FieldAccuracy {
+  return { field, truthPresent: 0, reported: 0, correct: 0, falsePositive: 0, routedToReview: 0, precision: null, recall: null }
+}
+
+/** One cell's contribution. `f` undefined means the extractor produced no field for it. */
+function tally(row: FieldAccuracy, field: ScoredField, f: Field | undefined, expected: string | number | null): void {
+  if (expected !== null) row.truthPresent++
+  if (f?.state === 'read') {
+    row.reported++
+    if (expected === null) row.falsePositive++
+    else if (f.value !== null && valuesMatch(field, f.value, expected)) row.correct++
+  } else if (expected !== null) {
+    row.routedToReview++
+  }
+}
+
+function finish(row: FieldAccuracy): FieldAccuracy {
+  row.precision = row.reported === 0 ? null : row.correct / row.reported
+  row.recall = row.truthPresent === 0 ? null : row.correct / row.truthPresent
+  return row
 }
 
 /** Plain text, for the test log and the README. `-` where a ratio is undefined. */
