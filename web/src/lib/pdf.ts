@@ -2,14 +2,14 @@
  * File -> positioned text, every page, via pdf.js. The browser edge of
  * extraction; parsing lives in domain/. Derived from ledger-reconciler's
  * lib/pdf.ts (same author, MIT), which read page-1 text only. This one
- * keeps every fragment's box so a value can point back at its pixels.
+ * keeps every word's box so a value can point back at its pixels.
  */
 
 import type * as PdfjsTypes from 'pdfjs-dist'
-import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 
 import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import type { BBox, Line, PdfPage, PositionedItem, Span } from '../domain/types'
+import { readGlyphs } from './glyphs'
 
 // The external oracle (tests/oracle.spans.test.ts) imports boxFor from here,
 // but the interpolation math is pure and belongs in domain/; this is just a
@@ -34,97 +34,10 @@ export async function loadPdfjs(): Promise<typeof PdfjsTypes> {
   return cached
 }
 
-/**
- * Glyph height in points. pdf.js's `height` is 0 for some real fragments
- * (any run whose text is whitespace, and occasionally short runs), which
- * would make a zero-height provenance box. The vertical scale of the text
- * matrix is the font size actually in effect, so it is the fallback.
- */
-function glyphHeight(item: TextItem): number {
-  if (item.height > 0) return item.height
-  const [, b, , d] = item.transform
-  return Math.hypot(b, d)
-}
-
-/**
- * Relative glyph widths (AFM Helvetica, /1000 em) used only to split a
- * pdf.js TextItem into per-word items before it ever reaches assembleLines.
- * pdf.js's public getTextContent() reports one advance for an entire Tj
- * run (a whole address or footer line is routinely ONE item), so treating
- * such a run as a single span and leaning on domain/spans.ts's uniform
- * per-character interpolation for the whole run is off by several points
- * on a proportional font (measured against the PyMuPDF oracle). These
- * invoices are all set in ordinary sans-serif business fonts, so a generic
- * Helvetica-shaped table, scaled to the run's own measured width, recovers
- * word-accurate boxes without reading the embedded font itself (pdf.js
- * exposes no public API for that). Anything not in the table falls back to
- * the digit width (556), a safe average for Latin text.
- */
-const GLYPH_WIDTH: Record<string, number> = {
-  ' ': 278, '!': 278, '"': 355, '#': 556, $: 556, '%': 889, '&': 667, "'": 191,
-  '(': 333, ')': 333, '*': 389, '+': 584, ',': 278, '-': 333, '.': 278, '/': 278,
-  '0': 556, '1': 556, '2': 556, '3': 556, '4': 556, '5': 556, '6': 556, '7': 556, '8': 556, '9': 556,
-  ':': 278, ';': 278, '<': 584, '=': 584, '>': 584, '?': 556, '@': 1015,
-  A: 667, B: 667, C: 722, D: 722, E: 667, F: 611, G: 778, H: 722, I: 278, J: 500,
-  K: 667, L: 556, M: 833, N: 722, O: 778, P: 667, Q: 778, R: 722, S: 667, T: 611,
-  U: 722, V: 667, W: 944, X: 667, Y: 667, Z: 611,
-  '[': 278, '\\': 278, ']': 278, '^': 469, _: 556, '`': 333,
-  a: 556, b: 556, c: 500, d: 556, e: 556, f: 278, g: 556, h: 556, i: 222, j: 222,
-  k: 500, l: 222, m: 833, n: 556, o: 556, p: 556, q: 556, r: 333, s: 500, t: 278,
-  u: 556, v: 500, w: 722, x: 500, y: 500, z: 500,
-  '{': 334, '|': 260, '}': 334, '~': 584,
-  '£': 556, '€': 556, '₺': 556, '·': 278,
-}
-const DEFAULT_GLYPH_WIDTH = 556
-
-function glyphWidth(c: string): number {
-  return GLYPH_WIDTH[c] ?? DEFAULT_GLYPH_WIDTH
-}
-
-/**
- * Splits one pdf.js TextItem into one PositionedItem per word, so a run
- * like "Suite 12, 45 Quayside, Bristol BS1 4TR" (one Tj call, one advance)
- * becomes several narrower items, each carrying its own estimated box. The
- * split point of every word is the cumulative GLYPH_WIDTH fraction of the
- * run scaled to the run's real measured width, so the sum of the pieces
- * still equals the item's own width exactly. A run with no internal space
- * is left as a single item (nothing to gain from splitting it).
- */
-function splitWordItems(str: string, x: number, y: number, width: number, height: number): PositionedItem[] {
-  if (!str.includes(' ')) return [{ str, bbox: { x, y, width, height } }]
-  let total = 0
-  for (const c of str) total += glyphWidth(c)
-  if (total === 0) return [{ str, bbox: { x, y, width, height } }]
-  const scale = width / total
-  const out: PositionedItem[] = []
-  let cum = 0
-  let wordStart = -1
-  let wordCum = 0
-  for (let i = 0; i <= str.length; i++) {
-    const c = str[i]
-    const isBoundary = c === undefined || c === ' '
-    if (!isBoundary) {
-      if (wordStart === -1) {
-        wordStart = i
-        wordCum = cum
-      }
-    } else if (wordStart !== -1) {
-      out.push({ str: str.slice(wordStart, i), bbox: { x: x + wordCum * scale, y, width: (cum - wordCum) * scale, height } })
-      wordStart = -1
-    }
-    if (c !== undefined) cum += glyphWidth(c)
-  }
-  return out
-}
-
 /** Failures that mean "no readable text here", not "the reader broke". */
 const BENIGN_READ_FAILURE = /InvalidPDF|Invalid PDF|Corrupt|password|Missing PDF|Empty file/i
 
 export class PdfReadError extends Error {}
-
-function isTextItem(item: unknown): item is TextItem {
-  return typeof item === 'object' && item !== null && 'str' in item
-}
 
 /**
  * Groups fragments into lines by baseline, within a tolerance, and joins
@@ -204,21 +117,10 @@ export async function readPdf(file: Blob, fileName: string): Promise<PdfPage[]> 
     for (let n = 1; n <= doc.numPages; n++) {
       const page = await doc.getPage(n)
       const viewport = page.getViewport({ scale: 1 })
-      const content = await page.getTextContent()
-      const items: PositionedItem[] = []
-      for (const item of content.items) {
-        if (!isTextItem(item)) continue
-        // Whitespace-only fragments are dropped: nothing can point provenance
-        // at a space, and pdf.js reports height 0 for them, which would put a
-        // degenerate box in the index. Lines get their spacing from the x gap.
-        if (item.str.trim() === '') continue
-        // transform[4..5] is the baseline start in PDF space (bottom-left
-        // origin, rotation applied by the viewport). Convert the baseline
-        // point, then hang the box above it by the glyph height.
-        const [vx, vy] = viewport.convertToViewportPoint(item.transform[4], item.transform[5])
-        const h = glyphHeight(item)
-        items.push(...splitWordItems(item.str, vx, vy - h, item.width, h))
-      }
+      // One item per word, boxed from the operator list's own glyph advances
+      // (lib/glyphs.ts). getTextContent() would hand back one box per run,
+      // and a run here is often a whole address line.
+      const items = await readGlyphs(page, viewport, pdfjs)
       pages.push({ page: n, width: viewport.width, height: viewport.height, items, lines: assembleLines(items) })
     }
     return pages

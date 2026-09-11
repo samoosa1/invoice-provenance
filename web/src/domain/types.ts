@@ -8,7 +8,7 @@
 
 export type BBox = { x: number; y: number; width: number; height: number }
 
-/** One text fragment as the PDF positions it. */
+/** One word, boxed from the glyph advances the PDF itself positions it with (lib/glyphs.ts). */
 export type PositionedItem = { str: string; bbox: BBox }
 
 /**
