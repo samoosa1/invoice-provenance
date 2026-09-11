@@ -133,4 +133,37 @@ describe('ground truth', () => {
   it('marks five documents as scans', () => {
     expect(truths.filter((t) => t.scanned !== '')).toHaveLength(5)
   })
+
+  /**
+   * The sample vendors print bank identifiers. A syntactically VALID one could
+   * coincide with a real account once this repo is public, so every IBAN in
+   * the generator must fail mod-97 and the Turkish VKN must fail its own
+   * check-digit algorithm. This reads the generator source directly: the
+   * identifiers are not in the truth files, and the PDFs are what a stranger
+   * would copy from.
+   */
+  it('prints only bank identifiers that fail their own checksum', () => {
+    const vendorsPy = readFileSync(new URL('../../tools/sample_gen/vendors.py', import.meta.url), 'utf8')
+
+    const ibans = [...vendorsPy.matchAll(/IBAN ([A-Z]{2}\d{2}(?: [A-Z0-9]{2,4})+)/g)].map((m) => m[1])
+    expect(ibans.length).toBeGreaterThanOrEqual(3)
+    for (const iban of ibans) {
+      const s = iban.replace(/ /g, '')
+      const rearranged = s.slice(4) + s.slice(0, 4)
+      const digits = [...rearranged].map((c) => parseInt(c, 36).toString()).join('')
+      expect(Number(BigInt(digits) % 97n), iban).not.toBe(1)
+    }
+
+    const vkn = /"VKN", "(\d{10})"/.exec(vendorsPy)?.[1]
+    expect(vkn).toBeDefined()
+    const d = [...vkn!].map(Number)
+    let total = 0
+    for (let i = 0; i < 9; i++) {
+      const t = (d[i] + 9 - i) % 10
+      let q = (t * 2 ** (9 - i)) % 9
+      if (t !== 0 && q === 0) q = 9
+      total += q
+    }
+    expect((10 - (total % 10)) % 10, vkn).not.toBe(d[9])
+  })
 })
