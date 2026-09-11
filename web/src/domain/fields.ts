@@ -605,8 +605,8 @@ function totalCandidatesWithLines(pages: PdfPage[]): { candidates: Candidate[]; 
 
 const SYMBOL_CURRENCY: Record<string, string> = { '£': 'GBP', '€': 'EUR', '₺': 'TRY' }
 
-// Document-level tax-label / tax-id hints, tried only when the winning total
-// line carries neither an ISO code nor a currency symbol.
+// Document-level tax-label / tax-id hints, tried only when nothing else on
+// or off the winning total line carries an ISO code or a currency symbol.
 const CURRENCY_HINTS: Array<{ re: RegExp; currency: string }> = [
   { re: /MwSt|USt/d, currency: 'EUR' },
   { re: /VAT\s*Reg\s*No/d, currency: 'GBP' },
@@ -615,46 +615,88 @@ const CURRENCY_HINTS: Array<{ re: RegExp; currency: string }> = [
   { re: /\bEIN\b/d, currency: 'USD' },
 ]
 
+const ISO_CODE_RE = /\b(USD|EUR|GBP|AUD|TRY|NOK|SEK|CHF|CAD)\b/d
+const CURRENCY_SYMBOL_RE = /([£€₺$])/d
+
 function currencyCandidates(pages: PdfPage[], winner: Candidate | null, winnerLine: Line | null): Candidate[] {
-  if (!winner || !winnerLine) return []
   const out: Candidate[] = []
 
-  // rank 0: an explicit ISO code on the total's own line (also covers the
-  // "TOTAL <CODE>" form, e.g. "TOTAL USD 3,820.96")
-  const isoRe = /\b(USD|EUR|GBP|AUD|TRY|NOK|SEK|CHF|CAD)\b/d
-  const isoM = isoRe.exec(winnerLine.text)
-  if (isoM?.indices) {
-    const [s, e] = isoM.indices[1]!
-    out.push({ value: isoM[1], raw: isoM[1], page: winner.page, bbox: boxFor(winnerLine, s, e), confidence: null, patternRank: 0 })
-    return out
+  if (winner && winnerLine) {
+    // rank 0: an explicit ISO code on the total's own line (also covers the
+    // "TOTAL <CODE>" form, e.g. "TOTAL USD 3,820.96")
+    const isoM = ISO_CODE_RE.exec(winnerLine.text)
+    if (isoM?.indices) {
+      const [s, e] = isoM.indices[1]!
+      out.push({ value: isoM[1], raw: isoM[1], page: winner.page, bbox: boxFor(winnerLine, s, e), confidence: null, patternRank: 0 })
+      return out
+    }
+
+    // rank 1: a currency symbol on the total's own line. `$` is ambiguous
+    // between USD and AUD in this sample set, so it emits both at the SAME
+    // rank and is never tie-broken by a later rank.
+    const symM = CURRENCY_SYMBOL_RE.exec(winnerLine.text)
+    if (symM?.indices) {
+      const [s, e] = symM.indices[1]!
+      const bbox = boxFor(winnerLine, s, e)
+      const sym = symM[1]
+      if (sym === '$') {
+        out.push({ value: 'USD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+        out.push({ value: 'AUD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+      } else {
+        out.push({ value: SYMBOL_CURRENCY[sym], raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+      }
+      return out
+    }
   }
 
-  // rank 1: a currency symbol on the total's own line. `$` is ambiguous
-  // between USD and AUD in this sample set, so it emits both at the SAME
-  // rank and is never tie-broken by a rank-2 hint.
-  const symRe = /([£€₺$])/d
-  const symM = symRe.exec(winnerLine.text)
-  if (symM?.indices) {
-    const [s, e] = symM.indices[1]!
-    const bbox = boxFor(winnerLine, s, e)
-    const sym = symM[1]
-    if (sym === '$') {
-      out.push({ value: 'USD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
-      out.push({ value: 'AUD', raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
-    } else {
-      out.push({ value: SYMBOL_CURRENCY[sym], raw: sym, page: winner.page, bbox, confidence: null, patternRank: 1 })
+  // rank 2: an ISO code anywhere in the document (no total winner required),
+  // box of the first occurrence.
+  for (const page of pages) {
+    for (const line of page.lines) {
+      const m = ISO_CODE_RE.exec(line.text)
+      if (m?.indices) {
+        const [s, e] = m.indices[1]!
+        out.push({ value: m[1], raw: m[1], page: page.page, bbox: boxFor(line, s, e), confidence: null, patternRank: 2 })
+        return out
+      }
+    }
+  }
+
+  // rank 3: currency symbols anywhere in the document. Every DISTINCT symbol
+  // becomes its own candidate (box of its first occurrence), so a document
+  // mixing symbols (e.g. £ and €) disagrees and resolveField reports
+  // 'uncertain'; `$` still expands to USD and AUD at this rank.
+  const firstOccurrence = new Map<string, { page: number; bbox: ReturnType<typeof boxFor> }>()
+  for (const page of pages) {
+    for (const line of page.lines) {
+      for (const m of line.text.matchAll(/([£€₺$])/gd)) {
+        const sym = m[1]
+        if (firstOccurrence.has(sym)) continue
+        const indices = (m as RegExpMatchArray & { indices: Array<[number, number]> }).indices[1]!
+        firstOccurrence.set(sym, { page: page.page, bbox: boxFor(line, indices[0], indices[1]) })
+      }
+    }
+  }
+  if (firstOccurrence.size > 0) {
+    for (const [sym, { page, bbox }] of firstOccurrence) {
+      if (sym === '$') {
+        out.push({ value: 'USD', raw: sym, page, bbox, confidence: null, patternRank: 3 })
+        out.push({ value: 'AUD', raw: sym, page, bbox, confidence: null, patternRank: 3 })
+      } else {
+        out.push({ value: SYMBOL_CURRENCY[sym], raw: sym, page, bbox, confidence: null, patternRank: 3 })
+      }
     }
     return out
   }
 
-  // rank 2: a document-level tax-label or tax-id hint
+  // rank 4: a document-level tax-label or tax-id hint
   for (const page of pages) {
     for (const line of page.lines) {
       for (const hint of CURRENCY_HINTS) {
         const m = hint.re.exec(line.text)
         if (m?.indices) {
           const [s, e] = m.indices[0]!
-          out.push({ value: hint.currency, raw: m[0], page: page.page, bbox: boxFor(line, s, e), confidence: null, patternRank: 2 })
+          out.push({ value: hint.currency, raw: m[0], page: page.page, bbox: boxFor(line, s, e), confidence: null, patternRank: 4 })
           return out
         }
       }
