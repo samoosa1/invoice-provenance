@@ -27,6 +27,11 @@ class Vendor:
     services: tuple[str, ...]
 
 
+# Every bank identifier below is invented AND fails its own checksum on purpose:
+# the IBANs have a check digit bumped so mod-97 gives 2 rather than 1, and the
+# VKN fails the Turkish tax-number algorithm. A syntactically valid identifier
+# could coincide with somebody's real account once this repo is public; one
+# that cannot validate is provably nobody's.
 VENDORS: list[Vendor] = [
     Vendor("Bluefern Supplies Ltd", "uk_service.html", "GB", "GBP", "£", "us", "%d/%m/%Y", "BF-{n:05d}",
            "VAT 20%", 0.20, "14 Tanner Row, York YO1 6JB", "VAT Reg No", "GB 482 7191 44",
@@ -44,7 +49,7 @@ VENDORS: list[Vendor] = [
            ("Process review, days", "Workshop facilitation", "Report drafting", "Follow-up call")),
     Vendor("Pinehollow Office Co", "grid_einvoice.html", "DE", "EUR", "€", "eu", "%d.%m.%Y", "PH/2025/{n:04d}",
            "MwSt. 19%", 0.19, "Lindenstraße 27, 10969 Berlin", "USt-IdNr.", "DE 311 908 274",
-           "IBAN DE44 5001 0517 5407 3249 31 · BIC INGDDEFFXXX",
+           "IBAN DE45 5001 0517 5407 3249 31 · BIC INGDDEFFXXX",
            ("Bürostuhl ergonomisch", "Schreibtisch höhenverstellbar", "Monitorarm", "Aktenschrank 4OH",
             "Montage und Lieferung")),
     Vendor("Meridian Print Services", "uk_service.html", "GB", "GBP", "£", "us", "%d %B %Y", "MPS{n:06d}",
@@ -59,11 +64,11 @@ VENDORS: list[Vendor] = [
             "Security patrol, nights")),
     Vendor("Halden & Roux Avocats", "grid_einvoice.html", "FR", "EUR", "€", "eu", "%d/%m/%Y", "HR-{n:04d}",
            "TVA 20%", 0.20, "12 rue de Turbigo, 75002 Paris", "N° TVA", "FR 76 512 380 419",
-           "IBAN FR76 3000 6000 0112 3456 7890 189",
+           "IBAN FR77 3000 6000 0112 3456 7890 189",
            ("Consultation juridique", "Rédaction de contrat", "Revue de conformité", "Honoraires forfaitaires")),
     Vendor("Karadut Yazılım A.Ş.", "grid_einvoice.html", "TR", "TRY", "₺", "eu", "%d.%m.%Y", "KDY2025{n:09d}",
            "KDV %20", 0.20, "Maslak Mah. Büyükdere Cad. No:255 Sarıyer / İstanbul", "VKN", "5120398761",
-           "IBAN TR33 0006 1005 1978 6457 8413 26",
+           "IBAN TR34 0006 1005 1978 6457 8413 26",
            ("Yazılım bakım hizmeti", "Sunucu barındırma", "Lisans yenileme", "Danışmanlık, saat")),
     Vendor("Saltmarsh Coffee Roasters", "thermal_receipt.html", "US", "USD", "$", "plain", "%m/%d/%y", "{n}",
            "Tax 8.875%", 0.08875, "203 Water St, Brooklyn, NY 11201", "", "",
