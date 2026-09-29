@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from app.db import get_session
 from app.main import app
 from app.models import Document, Field, Run
+from app.schemas import MAX_FIELDS_PER_DOCUMENT
 from app.settings import Settings, settings
 
 TOKEN = settings.workspace_token
@@ -139,6 +140,18 @@ def test_a_value_over_512_chars_is_rejected(client) -> None:
     fields[0]["value"] = "x" * 513
     r = client.post(f"/api/runs/{run_id}/fields", json={"document_id": doc_id, "coverage": COVERAGE_8, "fields": fields}, headers=AUTH)
     assert r.status_code == 422
+
+
+def test_more_fields_than_the_cap_are_rejected_with_zero_rows(client, session) -> None:
+    run_id = make_run(client)
+    doc_id = make_doc(client, run_id, fingerprint="a1" * 32)
+    n = MAX_FIELDS_PER_DOCUMENT + 1
+    fields = [{**eight_fields()[0], "name": f"line_item[{i}].amount"} for i in range(n)]
+    coverage = {"total": n, "read": n, "corrected": 0, "uncertain": 0, "not_found": 0}
+    before = count(session, Field)
+    r = client.post(f"/api/runs/{run_id}/fields", json={"document_id": doc_id, "coverage": coverage, "fields": fields}, headers=AUTH)
+    assert r.status_code == 422
+    assert count(session, Field) == before
 
 
 def test_content_bearing_keys_are_refused(client) -> None:

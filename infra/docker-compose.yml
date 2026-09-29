@@ -44,6 +44,8 @@ services:
     build:
       context: ..
       dockerfile: infra/Dockerfile.web
+      args:
+        VITE_WORKSPACE_TOKEN: ${WORKSPACE_TOKEN:-dev-token-change-me}
     depends_on:
       - api
     ports:

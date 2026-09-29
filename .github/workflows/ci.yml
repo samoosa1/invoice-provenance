@@ -22,6 +22,8 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          VITE_WORKSPACE_TOKEN: ci-build-token
 
   api:
     runs-on: ubuntu-latest

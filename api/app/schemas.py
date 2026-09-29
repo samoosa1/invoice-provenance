@@ -62,13 +62,19 @@ class DocumentIn(Strict):
     page_count: int | None = Field(default=None, ge=0)
 
 
+# Header fields plus four per line item: 1000 covers an invoice with ~248
+# rows. Anything larger is not a document we read; it is a payload to refuse
+# before the coverage recount even starts.
+MAX_FIELDS_PER_DOCUMENT = 1000
+
+
 class FieldsIn(Strict):
     """One document's fields plus the browser's own coverage line for them.
     The server recounts and refuses the write if the two disagree."""
 
     document_id: UUID
     coverage: CoverageIn
-    fields: list[FieldIn]
+    fields: list[FieldIn] = Field(max_length=MAX_FIELDS_PER_DOCUMENT)
 
 
 class CorrectionIn(Strict):

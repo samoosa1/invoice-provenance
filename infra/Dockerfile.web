@@ -3,6 +3,9 @@ WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY web ./
+# Must match the api service's WORKSPACE_TOKEN; compose passes it through.
+ARG VITE_WORKSPACE_TOKEN=dev-token-change-me
+ENV VITE_WORKSPACE_TOKEN=$VITE_WORKSPACE_TOKEN
 RUN npm run build
 
 FROM nginx:1.27-alpine

@@ -10,8 +10,9 @@ import { coverageOf, type Coverage } from '../domain/coverage'
 import type { Field } from '../domain/types'
 
 /** One shared workspace token for the demo (multi-tenant is out of scope).
- * Compose and the dev API both default to this value; a deployment sets
- * VITE_WORKSPACE_TOKEN at build time to match its WORKSPACE_TOKEN. */
+ * The dev server and the dev API both default to this value. A production
+ * build refuses to run without VITE_WORKSPACE_TOKEN (see vite.config.ts), so
+ * the fallback below is only ever reached in dev. */
 const TOKEN: string = import.meta.env.VITE_WORKSPACE_TOKEN ?? 'dev-token-change-me'
 
 export class ApiError extends Error {
