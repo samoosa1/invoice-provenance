@@ -9,3 +9,4 @@ __pycache__
 .DS_Store
 .vercel
 *.egg-info/
+.env.local

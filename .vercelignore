@@ -1,0 +1,11 @@
+.git
+node_modules
+web/node_modules
+web/dist
+api/.venv
+api/tests
+api/.env
+db
+infra
+tools
+.github

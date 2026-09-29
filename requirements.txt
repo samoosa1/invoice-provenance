@@ -1,0 +1,8 @@
+# Runtime dependencies for the Vercel Python function (api/index.py).
+# Mirrors api/pyproject.toml minus uvicorn and alembic, which a serverless
+# runtime neither starts nor migrates with.
+fastapi>=0.115
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
+pydantic>=2.7
+pydantic-settings>=2.3
